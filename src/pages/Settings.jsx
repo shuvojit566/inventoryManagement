@@ -1,8 +1,7 @@
 import React, { useState } from 'react'
 import SettingsPanel from '../components/SettingsPanel'
 import useStore from '../store/useStore'
-import { Settings, Package, Users, DollarSign } from 'lucide-react'
-
+import { Settings as SettingsIcon, Package, Users, DollarSign } from 'lucide-react'
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('general')
   const store = useStore()
