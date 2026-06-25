@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root { height: 100%; }
+body { @apply bg-slate-50 text-slate-900 font-sans; }
+
+/* High-density form adjustments */
+.dense-input { @apply text-sm py-1.5 px-3 border rounded-sm; }
+.dense-cell { @apply text-sm px-2 py-1; }

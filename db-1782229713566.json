@@ -1,0 +1,35 @@
+{
+  "businesses": [
+    {
+      "id": "b1",
+      "name": "Acme Traders",
+      "gstin": "29ABCDE1234F2Z5"
+    }
+  ],
+  "products": [
+    {
+      "id": "p1",
+      "name": "Widget A",
+      "hsn": "1234",
+      "price": 199,
+      "stock": 100
+    },
+    {
+      "id": "p2",
+      "name": "Widget B",
+      "hsn": "5678",
+      "price": 299,
+      "stock": 50
+    }
+  ],
+  "customers": [
+    {
+      "id": "c1",
+      "name": "Ravi",
+      "phone": "9999999999",
+      "balance": 0
+    }
+  ],
+  "sales": [],
+  "expenses": []
+}

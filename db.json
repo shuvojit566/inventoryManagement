@@ -1,0 +1,32 @@
+{
+  "businesses": [
+    { "id": "b1", "name": "Acme Traders", "gstin": "29ABCDE1234F2Z5" }
+  ],
+  "products": [
+    { "id": "p1", "name": "Widget A", "hsn": "1234", "price": 199.00, "stock": 100 },
+    { "id": "p2", "name": "Widget B", "hsn": "5678", "price": 299.00, "stock": 50 },
+    { "id": "p3", "name": "Widget C", "hsn": "9012", "price": 149.00, "stock": 75 }
+  ],
+  "customers": [
+    { "id": "c1", "name": "Ravi", "phone": "9999999999", "balance": 0 },
+    { "id": "c2", "name": "Priya", "phone": "8888888888", "balance": 5000 },
+    { "id": "c3", "name": "Amit", "phone": "7777777777", "balance": -2000 }
+  ],
+  "sales": [
+    { "id": 1, "date": "2024-01-15T10:30:00Z", "customerId": "c1", "items": [{"productId": "p1", "qty": 2, "price": 199, "tax": 18}], "total": 470, "paymentMode": "cash" },
+    { "id": 2, "date": "2024-01-15T14:15:00Z", "customerId": "c2", "items": [{"productId": "p2", "qty": 1, "price": 299, "tax": 12}], "total": 335, "paymentMode": "credit" }
+  ],
+  "expenses": [
+    { "id": 1, "date": "2024-01-15T09:00:00Z", "description": "Office Rent", "amount": 15000, "category": "rent" },
+    { "id": 2, "date": "2024-01-15T11:30:00Z", "description": "Supplies", "amount": 2000, "category": "supplies" }
+  ],
+  "settings": {
+    "id": "default",
+    "requireGSTIN": false,
+    "stopOnNegativeStock": true,
+    "passcodeLock": false,
+    "auditTrail": true,
+    "printTheme": "GST Theme 1"
+  }
+}
+
