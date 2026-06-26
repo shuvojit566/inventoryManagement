@@ -8,32 +8,18 @@
   ],
   "products": [
     {
-      "id": "p1",
-      "name": "Widget A",
-      "hsn": "1234",
-      "price": 199,
-      "stock": 100
-    },
-    {
-      "id": "p2",
-      "name": "Widget B",
-      "hsn": "5678",
-      "price": 299,
-      "stock": 50
-    },
-    {
-      "id": "p3",
-      "name": "Widget C",
-      "hsn": "9012",
-      "price": 149,
-      "stock": 75
-    },
-    {
       "name": "Motor",
       "hsn": "111",
       "price": 100,
       "stock": 20,
       "id": "p1782412524780"
+    },
+    {
+      "name": "Controller",
+      "hsn": "234",
+      "price": 2300,
+      "stock": 10,
+      "id": "p1782484705309"
     }
   ],
   "customers": [

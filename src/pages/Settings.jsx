@@ -31,17 +31,17 @@ export default function Settings() {
     <div className="space-y-6">
       {/* Tab Navigation */}
       <div className="flex gap-2 border-b bg-white rounded-t-lg -m-4 mb-0">
-        <button
-          onClick={() => setActiveTab('general')}
-          className={`px-4 py-3 font-medium text-sm border-b-2 transition ${
-            activeTab === 'general'
-              ? 'border-sky-600 text-sky-600'
-              : 'border-transparent text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          <Settings className="w-4 h-4 inline mr-2" />
-          General Settings
-        </button>
+      <button
+  onClick={() => setActiveTab('general')}
+  className={`px-4 py-3 font-medium text-sm border-b-2 transition ${
+    activeTab === 'general'
+      ? 'border-sky-600 text-sky-600'
+      : 'border-transparent text-gray-600 hover:text-gray-900'
+  }`}
+>
+  <SettingsIcon className="w-4 h-4 inline mr-2" />
+  General Settings
+</button>
         <button
           onClick={() => setActiveTab('manage')}
           className={`px-4 py-3 font-medium text-sm border-b-2 transition ${
