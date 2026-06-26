@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import SettingsPanel from '../components/SettingsPanel'
 import useStore from '../store/useStore'
+import { toNumber } from '../utils/math'
 import { Settings as SettingsIcon, Package, Users, DollarSign } from 'lucide-react'
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('general')
@@ -68,14 +69,14 @@ export default function Settings() {
           <ManagementCard
             icon={Package}
             title="Products"
-            description={`Currently managing ${store.products.length} products with ${store.products.reduce((s, p) => s + p.stock, 0)} total units in stock`}
+            description={`Currently managing ${store.products.length} products with ${store.products.reduce((s, p) => s + toNumber(p.stock), 0)} total units in stock`}
             actionText="Manage"
             action={() => alert('Product management coming soon!')}
           />
           <ManagementCard
             icon={Users}
             title="Customers"
-            description={`${store.customers.length} customers in database. ${store.customers.filter(c => (c.balance || 0) > 0).length} have outstanding credits`}
+            description={`${store.customers.length} customers in database. ${store.customers.filter(c => toNumber(c.balance) > 0).length} have outstanding credits`}
             actionText="Manage"
             action={() => alert('Customer management coming soon!')}
           />

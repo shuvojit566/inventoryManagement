@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import useStore from '../store/useStore'
+import { toNumber } from '../utils/math'
 import { Trash2, Edit, Plus, AlertCircle } from 'lucide-react'
 
 export default function ProductsManagement() {
@@ -173,22 +174,22 @@ export default function ProductsManagement() {
                 <tr key={product.id} className="border-b hover:bg-gray-50">
                   <td className="px-4 py-3 font-medium text-gray-900">{product.name}</td>
                   <td className="px-4 py-3 text-gray-600">{product.hsn}</td>
-                  <td className="px-4 py-3 text-right">₹{product.price?.toFixed(2) || '0'}</td>
+                  <td className="px-4 py-3 text-right">₹{toNumber(product.price).toFixed(2)}</td>
                   <td className="px-4 py-3 text-center">
                     <span
                       className={`px-2 py-1 rounded text-xs font-medium ${
-                        product.stock > 20
+                        toNumber(product.stock) > 20
                           ? 'bg-green-100 text-green-700'
-                          : product.stock > 10
+                          : toNumber(product.stock) > 10
                           ? 'bg-amber-100 text-amber-700'
                           : 'bg-red-100 text-red-700'
                       }`}
                     >
-                      {product.stock}
+                      {toNumber(product.stock)}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right text-gray-600">
-                    ₹{(product.price * product.stock)?.toFixed(2) || '0'}
+                    ₹{toNumber(toNumber(product.price) * toNumber(product.stock)).toFixed(2)}
                   </td>
                   <td className="px-4 py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
@@ -222,13 +223,13 @@ export default function ProductsManagement() {
         <div className="bg-white border rounded-lg p-4">
           <p className="text-xs text-gray-600 font-medium">Total Units</p>
           <p className="text-2xl font-bold text-gray-900 mt-1">
-            {store.products.reduce((s, p) => s + p.stock, 0)}
+            {store.products.reduce((s, p) => s + toNumber(p.stock), 0)}
           </p>
         </div>
         <div className="bg-white border rounded-lg p-4">
           <p className="text-xs text-gray-600 font-medium">Inventory Value</p>
           <p className="text-2xl font-bold text-gray-900 mt-1">
-            ₹{store.products.reduce((s, p) => s + p.price * p.stock, 0)?.toFixed(0) || '0'}
+            ₹{toNumber(store.products.reduce((s, p) => s + toNumber(p.price) * toNumber(p.stock), 0)).toFixed(0)}
           </p>
         </div>
         <div className="bg-white border rounded-lg p-4">

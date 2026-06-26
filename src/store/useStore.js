@@ -1,5 +1,37 @@
 import create from 'zustand'
 import * as api from '../utils/api'
+import { toNumber } from '../utils/math'
+
+const normalizeProduct = product => ({
+  ...product,
+  price: toNumber(product.price),
+  stock: toNumber(product.stock),
+})
+
+const normalizeCustomer = customer => ({
+  ...customer,
+  balance: toNumber(customer.balance),
+})
+
+const normalizeSaleItem = item => ({
+  ...item,
+  qty: toNumber(item.qty),
+  price: toNumber(item.price),
+  discount: toNumber(item.discount),
+  tax: toNumber(item.tax),
+  amount: toNumber(item.amount),
+})
+
+const normalizeSale = sale => ({
+  ...sale,
+  total: toNumber(sale.total),
+  items: Array.isArray(sale.items) ? sale.items.map(normalizeSaleItem) : [],
+})
+
+const normalizeExpense = expense => ({
+  ...expense,
+  amount: toNumber(expense.amount),
+})
 
 const useStore = create((set, get) => ({
   businesses: [],
@@ -38,10 +70,10 @@ const useStore = create((set, get) => ({
       ])
       set({
         businesses,
-        products,
-        customers,
-        sales,
-        expenses,
+        products: products.map(normalizeProduct),
+        customers: customers.map(normalizeCustomer),
+        sales: sales.map(normalizeSale),
+        expenses: expenses.map(normalizeExpense),
         settings: Array.isArray(settings) && settings[0] ? settings[0] : settings,
         activeBusinessId: businesses?.[0]?.id || null,
         loading: false,
@@ -54,10 +86,12 @@ const useStore = create((set, get) => ({
   // Products
   addProduct: async (product) => {
     try {
-      const newProduct = await api.addProduct({
+      const newProduct = normalizeProduct(await api.addProduct({
         ...product,
+        price: toNumber(product.price),
+        stock: toNumber(product.stock),
         id: `p${Date.now()}`,
-      })
+      }))
       set(state => ({ products: [...state.products, newProduct] }))
       return newProduct
     } catch (err) {
@@ -68,7 +102,7 @@ const useStore = create((set, get) => ({
 
   updateProduct: async (id, product) => {
     try {
-      const updated = await api.updateProduct(id, product)
+      const updated = normalizeProduct(await api.updateProduct(id, normalizeProduct(product)))
       set(state => ({
         products: state.products.map(p => (p.id === id ? updated : p)),
       }))
@@ -97,11 +131,11 @@ const useStore = create((set, get) => ({
   // Customers
   addCustomer: async (customer) => {
     try {
-      const newCustomer = await api.addCustomer({
+      const newCustomer = normalizeCustomer(await api.addCustomer({
         ...customer,
         id: `c${Date.now()}`,
-        balance: customer.balance || 0,
-      })
+        balance: toNumber(customer.balance),
+      }))
       set(state => ({ customers: [...state.customers, newCustomer] }))
       return newCustomer
     } catch (err) {
@@ -112,7 +146,7 @@ const useStore = create((set, get) => ({
 
   updateCustomer: async (id, customer) => {
     try {
-      const updated = await api.updateCustomer(id, customer)
+      const updated = normalizeCustomer(await api.updateCustomer(id, normalizeCustomer(customer)))
       set(state => ({
         customers: state.customers.map(c => (c.id === id ? updated : c)),
       }))
@@ -131,32 +165,33 @@ const useStore = create((set, get) => ({
   // Sales
   addSale: async (sale) => {
     try {
-      const newSale = await api.addSale({
+      const saleToSave = normalizeSale({
         ...sale,
         id: Date.now(),
         date: sale.date || new Date().toISOString(),
       })
+      const newSale = normalizeSale(await api.addSale(saleToSave))
       set(state => ({ sales: [...state.sales, newSale] }))
       
       // Update customer balance if on credit
-      if (sale.customerId && sale.paymentMode === 'credit') {
-        const customer = get().getCustomer(sale.customerId)
+      if (saleToSave.customerId && saleToSave.paymentMode === 'credit') {
+        const customer = get().getCustomer(saleToSave.customerId)
         if (customer) {
-          await get().updateCustomer(sale.customerId, {
+          await get().updateCustomer(saleToSave.customerId, {
             ...customer,
-            balance: (customer.balance || 0) + (sale.total || 0),
+            balance: toNumber(customer.balance) + saleToSave.total,
           })
         }
       }
       
       // Update product stock
-      if (sale.items) {
-        for (const item of sale.items) {
+      if (saleToSave.items) {
+        for (const item of saleToSave.items) {
           const product = get().getProduct(item.productId)
           if (product) {
             await get().updateProduct(item.productId, {
               ...product,
-              stock: Math.max(0, product.stock - (item.qty || 0)),
+              stock: Math.max(0, toNumber(product.stock) - toNumber(item.qty)),
             })
           }
         }
@@ -188,11 +223,12 @@ const useStore = create((set, get) => ({
   // Expenses
   addExpense: async (expense) => {
     try {
-      const newExpense = await api.addExpense({
+      const newExpense = normalizeExpense(await api.addExpense({
         ...expense,
         id: Date.now(),
         date: expense.date || new Date().toISOString(),
-      })
+        amount: toNumber(expense.amount),
+      }))
       set(state => ({ expenses: [...state.expenses, newExpense] }))
       return newExpense
     } catch (err) {
@@ -203,7 +239,7 @@ const useStore = create((set, get) => ({
 
   updateExpense: async (id, expense) => {
     try {
-      const updated = await api.updateExpense(id, expense)
+      const updated = normalizeExpense(await api.updateExpense(id, normalizeExpense(expense)))
       set(state => ({
         expenses: state.expenses.map(e => (e.id === id ? updated : e)),
       }))
@@ -245,24 +281,24 @@ const useStore = create((set, get) => ({
   // Utility
   getTotalReceivables: () => {
     const state = get()
-    return state.customers.reduce((sum, c) => sum + Math.max(0, c.balance || 0), 0)
+    return state.customers.reduce((sum, c) => sum + Math.max(0, toNumber(c.balance)), 0)
   },
 
   getTotalTodaysSales: () => {
     return get()
       .getSalesToday()
-      .reduce((sum, s) => sum + (s.total || 0), 0)
+      .reduce((sum, s) => sum + toNumber(s.total), 0)
   },
 
   getTotalTodaysExpenses: () => {
     return get()
       .getExpensesToday()
-      .reduce((sum, e) => sum + (e.amount || 0), 0)
+      .reduce((sum, e) => sum + toNumber(e.amount), 0)
   },
 
   getLowStockProducts: (threshold = 10) => {
     const state = get()
-    return state.products.filter(p => (p.stock || 0) <= threshold)
+    return state.products.filter(p => toNumber(p.stock) <= threshold)
   },
 }))
 

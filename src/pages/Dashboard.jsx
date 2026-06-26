@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import useStore from '../store/useStore'
+import { toNumber } from '../utils/math'
 import { TrendingUp, Package, Users, DollarSign, AlertCircle } from 'lucide-react'
 
 export default function Dashboard() {
@@ -22,6 +23,7 @@ export default function Dashboard() {
 
   const todaysSales = store.getSalesToday()
   const recentTransactions = [...todaysSales].reverse().slice(0, 5)
+  const formatMoney = value => `₹${toNumber(value).toFixed(2)}`
 
   const StatCard = ({ icon: Icon, title, value, color = 'sky' }) => (
     <div className={`bg-white border border-${color}-200 rounded-lg p-4 hover:shadow-md transition`}>
@@ -42,19 +44,19 @@ export default function Dashboard() {
         <StatCard
           icon={DollarSign}
           title="Sales Today"
-          value={`₹${stats.salesToday.toFixed(2)}`}
+          value={formatMoney(stats.salesToday)}
           color="green"
         />
         <StatCard
           icon={TrendingUp}
           title="Expenses Today"
-          value={`₹${stats.expensesToday.toFixed(2)}`}
+          value={formatMoney(stats.expensesToday)}
           color="red"
         />
         <StatCard
           icon={Users}
           title="Receivables"
-          value={`₹${stats.receivables.toFixed(2)}`}
+          value={formatMoney(stats.receivables)}
           color="amber"
         />
         <StatCard
@@ -77,7 +79,7 @@ export default function Dashboard() {
             <div className="flex justify-between text-xs">
               <span>Total Value</span>
               <span className="font-bold">
-                ₹{store.products.reduce((sum, p) => sum + p.price * p.stock, 0).toFixed(2)}
+                {formatMoney(store.products.reduce((sum, p) => sum + toNumber(p.price) * toNumber(p.stock), 0))}
               </span>
             </div>
           </div>
@@ -93,7 +95,7 @@ export default function Dashboard() {
             <div className="flex justify-between text-xs">
               <span>Avg Order Value</span>
               <span className="font-bold">
-                ₹{todaysSales.length > 0 ? (stats.salesToday / todaysSales.length).toFixed(2) : '0'}
+                {formatMoney(todaysSales.length > 0 ? toNumber(stats.salesToday) / todaysSales.length : 0)}
               </span>
             </div>
           </div>
@@ -109,7 +111,7 @@ export default function Dashboard() {
             <div className="flex justify-between text-xs">
               <span>On Credit</span>
               <span className="font-bold text-amber-600">
-                {store.customers.filter(c => (c.balance || 0) > 0).length}
+                {store.customers.filter(c => toNumber(c.balance) > 0).length}
               </span>
             </div>
           </div>
@@ -167,7 +169,7 @@ export default function Dashboard() {
                           {sale.paymentMode === 'cash' ? 'Cash' : 'Credit'}
                         </span>
                       </td>
-                      <td className="px-4 py-2 text-right font-semibold">₹{sale.total?.toFixed(2) || '0'}</td>
+                      <td className="px-4 py-2 text-right font-semibold">{formatMoney(sale.total)}</td>
                     </tr>
                   )
                 })}

@@ -11,7 +11,7 @@
       "name": "Motor",
       "hsn": "111",
       "price": 100,
-      "stock": 20,
+      "stock": 19,
       "id": "p1782412524780"
     },
     {
@@ -40,6 +40,12 @@
       "name": "Amit",
       "phone": "7777777777",
       "balance": -2000
+    },
+    {
+      "name": "Khushi E-Rickshaw",
+      "phone": "86854565252",
+      "balance": 0,
+      "id": "c1782485326595"
     }
   ],
   "sales": [
@@ -72,6 +78,22 @@
       ],
       "total": 335,
       "paymentMode": "credit"
+    },
+    {
+      "date": "2026-06-26T14:49:07.009Z",
+      "customerId": "c1",
+      "items": [
+        {
+          "productId": "p1782412524780",
+          "qty": 1,
+          "price": 100,
+          "tax": 0
+        }
+      ],
+      "total": 100,
+      "paymentMode": "cash",
+      "taxMode": "exclusive",
+      "id": 1782485347009
     }
   ],
   "expenses": [

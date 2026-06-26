@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import BalanceSheet from '../components/BalanceSheet'
 import useStore from '../store/useStore'
+import { toNumber } from '../utils/math'
 import { Calendar, Download, TrendingUp, TrendingDown } from 'lucide-react'
 
 export default function Reports() {
@@ -10,6 +11,7 @@ export default function Reports() {
     return d.toISOString().split('T')[0]
   })
   const [reportType, setReportType] = useState('daybook')
+  const formatMoney = value => `₹${toNumber(value).toFixed(2)}`
 
   // Get today's transactions
   const dayBookTransactions = useMemo(() => {
@@ -22,9 +24,9 @@ export default function Reports() {
         date: s.date,
         type: 'sale',
         description: `Sale (${store.getCustomer(s.customerId)?.name || 'Unknown'})`,
-        debit: s.total || 0,
+        debit: toNumber(s.total),
         credit: 0,
-        amount: s.total || 0,
+        amount: toNumber(s.total),
       })),
       ...expenses.map(e => ({
         id: `e-${e.id}`,
@@ -32,25 +34,51 @@ export default function Reports() {
         type: 'expense',
         description: e.description,
         debit: 0,
-        credit: e.amount || 0,
-        amount: e.amount || 0,
+        credit: toNumber(e.amount),
+        amount: toNumber(e.amount),
       })),
     ].sort((a, b) => new Date(b.date) - new Date(a.date))
 
     return allTxns
   }, [store.sales, store.expenses, selectedDate])
 
+  const summary = useMemo(() => {
+    const totalSales = store.sales.reduce((sum, sale) => sum + toNumber(sale.total), 0)
+    const totalExpenses = store.expenses.reduce((sum, expense) => sum + toNumber(expense.amount), 0)
+    const inventoryValue = store.products.reduce(
+      (sum, product) => sum + toNumber(product.price) * toNumber(product.stock),
+      0
+    )
+    const totalUnits = store.products.reduce((sum, product) => sum + toNumber(product.stock), 0)
+    const totalReceivables = store.customers.reduce(
+      (sum, customer) => sum + Math.max(0, toNumber(customer.balance)),
+      0
+    )
+    const netProfit = totalSales - totalExpenses
+    const averageSale = store.sales.length > 0 ? totalSales / store.sales.length : 0
+
+    return {
+      totalSales,
+      totalExpenses,
+      inventoryValue,
+      totalUnits,
+      totalReceivables,
+      netProfit,
+      averageSale,
+    }
+  }, [store.products, store.customers, store.sales, store.expenses])
+
   // Calculate balance sheet
   const balanceSheet = useMemo(() => {
     // Assets
-    const stockValue = store.products.reduce((sum, p) => sum + p.price * p.stock, 0)
+    const stockValue = store.products.reduce((sum, p) => sum + toNumber(p.price) * toNumber(p.stock), 0)
 
     // Liabilities & Equity
-    const totalReceivables = store.customers.reduce((sum, c) => sum + Math.max(0, c.balance || 0), 0)
-    const totalPayables = store.customers.reduce((sum, c) => sum + Math.max(0, -(c.balance || 0)), 0)
+    const totalReceivables = store.customers.reduce((sum, c) => sum + Math.max(0, toNumber(c.balance)), 0)
+    const totalPayables = store.customers.reduce((sum, c) => sum + Math.max(0, -toNumber(c.balance)), 0)
 
-    const totalSales = store.sales.reduce((sum, s) => sum + (s.total || 0), 0)
-    const totalExpenses = store.expenses.reduce((sum, e) => sum + (e.amount || 0), 0)
+    const totalSales = store.sales.reduce((sum, s) => sum + toNumber(s.total), 0)
+    const totalExpenses = store.expenses.reduce((sum, e) => sum + toNumber(e.amount), 0)
     const netProfit = totalSales - totalExpenses
 
     return {
@@ -67,8 +95,8 @@ export default function Reports() {
 
   const dayBookTotals = useMemo(() => {
     return {
-      totalDebit: dayBookTransactions.reduce((s, t) => s + t.debit, 0),
-      totalCredit: dayBookTransactions.reduce((s, t) => s + t.credit, 0),
+      totalDebit: dayBookTransactions.reduce((s, t) => s + toNumber(t.debit), 0),
+      totalCredit: dayBookTransactions.reduce((s, t) => s + toNumber(t.credit), 0),
     }
   }, [dayBookTransactions])
 
@@ -193,10 +221,14 @@ export default function Reports() {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right font-semibold">
-                          {txn.debit > 0 ? `₹${txn.debit.toFixed(2)}` : '-'}
+                          {toNumber(txn.debit) > 0
+                          ? formatMoney(txn.debit)
+                          : '-'}
                         </td>
                         <td className="px-4 py-3 text-right font-semibold">
-                          {txn.credit > 0 ? `₹${txn.credit.toFixed(2)}` : '-'}
+                           {toNumber(txn.credit) > 0
+                             ? formatMoney(txn.credit)
+                             : '-'}
                         </td>
                       </tr>
                     ))}
@@ -205,11 +237,11 @@ export default function Reports() {
                 <div className="bg-gray-50 border-t px-4 py-3 flex justify-end gap-8 font-bold">
                   <div className="flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 text-green-600" />
-                    Total Debit: ₹{dayBookTotals.totalDebit.toFixed(2)}
+                    Total Debit: {formatMoney(dayBookTotals.totalDebit)}
                   </div>
                   <div className="flex items-center gap-2">
                     <TrendingDown className="w-4 h-4 text-red-600" />
-                    Total Credit: ₹{dayBookTotals.totalCredit.toFixed(2)}
+                    Total Credit: {formatMoney(dayBookTotals.totalCredit)}
                   </div>
                 </div>
               </div>
@@ -235,28 +267,22 @@ export default function Reports() {
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Total Sales</span>
-                <span className="font-bold">₹{store.sales.reduce((s, x) => s + (x.total || 0), 0).toFixed(2)}</span>
+                <span className="font-bold">{formatMoney(summary.totalSales)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Total Expenses</span>
-                <span className="font-bold">₹{store.expenses.reduce((s, x) => s + (x.amount || 0), 0).toFixed(2)}</span>
+                <span className="font-bold">{formatMoney(summary.totalExpenses)}</span>
               </div>
               <div className="flex justify-between text-sm border-t pt-2">
                 <span className="text-gray-600 font-semibold">Net Profit</span>
                 <span
                   className={`font-bold ${
-                    store.sales.reduce((s, x) => s + (x.total || 0), 0) -
-                      store.expenses.reduce((s, x) => s + (x.amount || 0), 0) >
-                    0
+                    summary.netProfit > 0
                       ? 'text-green-600'
                       : 'text-red-600'
                   }`}
                 >
-                  ₹
-                  {(
-                    store.sales.reduce((s, x) => s + (x.total || 0), 0) -
-                    store.expenses.reduce((s, x) => s + (x.amount || 0), 0)
-                  ).toFixed(2)}
+                  {formatMoney(summary.netProfit)}
                 </span>
               </div>
             </div>
@@ -274,13 +300,13 @@ export default function Reports() {
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Total Units</span>
                 <span className="font-bold">
-                  {store.products.reduce((s, p) => s + (p.stock || 0), 0)}
+                  {summary.totalUnits}
                 </span>
               </div>
               <div className="flex justify-between text-sm border-t pt-2">
                 <span className="text-gray-600 font-semibold">Inventory Value</span>
                 <span className="font-bold">
-                  ₹{store.products.reduce((s, p) => s + p.price * p.stock, 0).toFixed(2)}
+                  {formatMoney(summary.inventoryValue)}
                 </span>
               </div>
             </div>
@@ -298,13 +324,13 @@ export default function Reports() {
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">On Credit</span>
                 <span className="font-bold">
-                  {store.customers.filter(c => (c.balance || 0) > 0).length}
+                  {store.customers.filter(c => toNumber(c.balance) > 0).length}
                 </span>
               </div>
               <div className="flex justify-between text-sm border-t pt-2">
                 <span className="text-gray-600 font-semibold">Total Receivables</span>
                 <span className="font-bold text-amber-600">
-                  ₹{store.customers.reduce((s, c) => s + Math.max(0, c.balance || 0), 0).toFixed(2)}
+                  {formatMoney(summary.totalReceivables)}
                 </span>
               </div>
             </div>
@@ -322,10 +348,7 @@ export default function Reports() {
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Avg Transaction</span>
                 <span className="font-bold">
-                  ₹
-                  {store.sales.length > 0
-                    ? (store.sales.reduce((s, x) => s + (x.total || 0), 0) / store.sales.length).toFixed(2)
-                    : '0'}
+                  {formatMoney(summary.averageSale)}
                 </span>
               </div>
             </div>

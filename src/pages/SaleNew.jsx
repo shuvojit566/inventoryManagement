@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import DynamicItemTable from '../components/DynamicItemTable'
-import { toCents, fromCents } from '../utils/math'
+import { toNumber, fromCents } from '../utils/math'
 import useStore from '../store/useStore'
 import { AlertCircle, Check } from 'lucide-react'
 
@@ -53,11 +53,13 @@ export default function SaleNew() {
         customerId: selectedCustomer || 'c1',
         items: items.map(item => ({
           productId: item.productId,
-          qty: item.qty,
-          price: item.price,
-          tax: item.tax,
+          qty: toNumber(item.qty),
+          price: toNumber(item.price),
+          discount: toNumber(item.discount),
+          tax: toNumber(item.tax),
+          amount: toNumber(item.amount),
         })),
-        total: fromCents(finalTotal),
+        total: toNumber(fromCents(finalTotal)),
         paymentMode,
         taxMode: taxInclusive ? 'inclusive' : 'exclusive',
       }
@@ -120,7 +122,7 @@ export default function SaleNew() {
                 <option value="">Select Customer</option>
                 {store.customers.map(c => (
                   <option key={c.id} value={c.id}>
-                    {c.name} (Bal: ₹{c.balance || 0})
+                    {c.name} (Bal: ₹{toNumber(c.balance).toFixed(2)})
                   </option>
                 ))}
               </select>

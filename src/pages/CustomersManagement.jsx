@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import useStore from '../store/useStore'
+import { toNumber } from '../utils/math'
 import { Trash2, Edit, Plus, AlertCircle } from 'lucide-react'
 
 export default function CustomersManagement() {
@@ -59,8 +60,8 @@ export default function CustomersManagement() {
     }
   }
 
-  const totalReceivables = store.customers.reduce((s, c) => s + Math.max(0, c.balance || 0), 0)
-  const totalPayables = store.customers.reduce((s, c) => s + Math.max(0, -(c.balance || 0)), 0)
+  const totalReceivables = store.customers.reduce((s, c) => s + Math.max(0, toNumber(c.balance)), 0)
+  const totalPayables = store.customers.reduce((s, c) => s + Math.max(0, -toNumber(c.balance)), 0)
 
   return (
     <div className="space-y-4">
@@ -166,7 +167,7 @@ export default function CustomersManagement() {
               </tr>
             ) : (
               store.customers.map(customer => {
-                const balance = customer.balance || 0
+                const balance = toNumber(customer.balance)
                 const isDebtor = balance > 0
                 const isCreditor = balance < 0
 
@@ -185,7 +186,7 @@ export default function CustomersManagement() {
                     </td>
                     <td className="px-4 py-3 text-right font-semibold">
                       <span className={isDebtor ? 'text-amber-600' : isCreditor ? 'text-blue-600' : 'text-gray-600'}>
-                        ₹{Math.abs(balance)?.toFixed(2) || '0'}
+                        ₹{toNumber(Math.abs(balance)).toFixed(2)}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center">
@@ -221,16 +222,16 @@ export default function CustomersManagement() {
         <div className="bg-white border rounded-lg p-4">
           <p className="text-xs text-gray-600 font-medium">Active Debtors</p>
           <p className="text-2xl font-bold text-amber-600 mt-1">
-            {store.customers.filter(c => (c.balance || 0) > 0).length}
+            {store.customers.filter(c => toNumber(c.balance) > 0).length}
           </p>
         </div>
         <div className="bg-white border rounded-lg p-4">
           <p className="text-xs text-gray-600 font-medium">Total Receivables</p>
-          <p className="text-2xl font-bold text-amber-600 mt-1">₹{totalReceivables?.toFixed(0) || '0'}</p>
+          <p className="text-2xl font-bold text-amber-600 mt-1">₹{toNumber(totalReceivables).toFixed(0)}</p>
         </div>
         <div className="bg-white border rounded-lg p-4">
           <p className="text-xs text-gray-600 font-medium">Total Payables</p>
-          <p className="text-2xl font-bold text-blue-600 mt-1">₹{totalPayables?.toFixed(0) || '0'}</p>
+          <p className="text-2xl font-bold text-blue-600 mt-1">₹{toNumber(totalPayables).toFixed(0)}</p>
         </div>
       </div>
     </div>

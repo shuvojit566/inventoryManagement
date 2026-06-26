@@ -1,11 +1,15 @@
 // Minimal fixed-point cents-based helpers to avoid floating point errors
+export function toNumber(value, fallback = 0){
+  const n = Number(value)
+  return Number.isFinite(n) ? n : fallback
+}
+
 export function toCents(value){
-  const n = (typeof value === 'number') ? value : parseFloat(String(value) || '0')
-  return Math.round(n * 100)
+  return Math.round(toNumber(value) * 100)
 }
 
 export function fromCents(cents){
-  return (cents/100).toFixed(2)
+  return (toNumber(cents)/100).toFixed(2)
 }
 
 export function addCents(a,b){ return a + b }

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react'
-import { toCents, fromCents, mulCents, addCents } from '../utils/math'
+import { toNumber, toCents, fromCents, mulCents, addCents } from '../utils/math'
 import { X } from 'lucide-react'
 
 const TAX_RATES = [0, 5, 12, 18, 28]
@@ -20,7 +20,7 @@ function RowInput({ row, idx, onChange, onRemove, products }) {
               ...row,
               productId: e.target.value,
               description: prod?.name || '',
-              price: prod?.price || 0,
+              price: toNumber(prod?.price),
             })
           }}
         >
@@ -89,7 +89,7 @@ function RowInput({ row, idx, onChange, onRemove, products }) {
           ))}
         </select>
       </td>
-      <td className="px-3 py-2 text-right text-sm font-semibold text-sky-600">{row.amount}</td>
+      <td className="px-3 py-2 text-right text-sm font-semibold text-sky-600">{toNumber(row.amount).toFixed(2)}</td>
       <td className="px-3 py-2 text-center">
         <button
           onClick={() => onRemove(idx)}
@@ -130,14 +130,14 @@ export default function DynamicItemTable({
     let subtotalC = 0
     const rowsWithAmount = rows.map(r => {
       const priceC = toCents(r.price)
-      const qty = r.qty || 0
+      const qty = toNumber(r.qty)
       const lineBase = priceC * qty
       const discountC = toCents(r.discount)
-      const taxFactor = 1 + (r.tax || 0) / 100
+      const taxFactor = 1 + toNumber(r.tax) / 100
       const taxed = taxInclusive ? Math.round(lineBase) : Math.round(lineBase * taxFactor)
       const amountC = Math.max(0, taxed - discountC)
       subtotalC += amountC
-      return { ...r, amount: fromCents(amountC) }
+      return { ...r, amount: toNumber(fromCents(amountC)) }
     })
     return { rows: rowsWithAmount, subtotalC }
   }, [rows, taxInclusive])
