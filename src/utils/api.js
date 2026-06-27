@@ -101,6 +101,39 @@ export async function deleteSale(id) {
   await fetch(`${API_BASE}/sales/${id}`, { method: 'DELETE' })
 }
 
+// Purchases
+export async function fetchPurchases() {
+  const res = await fetch(`${API_BASE}/purchases`)
+  return res.json()
+}
+
+export async function addPurchase(purchase) {
+  const res = await fetch(`${API_BASE}/purchases`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(purchase),
+  })
+  return res.json()
+}
+
+export async function fetchPurchaseById(id) {
+  const res = await fetch(`${API_BASE}/purchases/${id}`)
+  return res.json()
+}
+
+export async function updatePurchase(id, purchase) {
+  const res = await fetch(`${API_BASE}/purchases/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(purchase),
+  })
+  return res.json()
+}
+
+export async function deletePurchase(id) {
+  await fetch(`${API_BASE}/purchases/${id}`, { method: 'DELETE' })
+}
+
 // Expenses
 export async function fetchExpenses() {
   const res = await fetch(`${API_BASE}/expenses`)

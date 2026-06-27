@@ -28,6 +28,21 @@ const normalizeSale = sale => ({
   items: Array.isArray(sale.items) ? sale.items.map(normalizeSaleItem) : [],
 })
 
+const normalizePurchaseItem = item => ({
+  ...item,
+  qty: toNumber(item.qty),
+  price: toNumber(item.price),
+  discount: toNumber(item.discount),
+  tax: toNumber(item.tax),
+  amount: toNumber(item.amount),
+})
+
+const normalizePurchase = purchase => ({
+  ...purchase,
+  total: toNumber(purchase.total),
+  items: Array.isArray(purchase.items) ? purchase.items.map(normalizePurchaseItem) : [],
+})
+
 const normalizeExpense = expense => ({
   ...expense,
   amount: toNumber(expense.amount),
@@ -39,6 +54,7 @@ const useStore = create((set, get) => ({
   products: [],
   customers: [],
   sales: [],
+  purchases: [],
   expenses: [],
   settings: {
     requireGSTIN: false,
@@ -54,11 +70,12 @@ const useStore = create((set, get) => ({
   initStore: async () => {
     set({ loading: true })
     try {
-      const [businesses, products, customers, sales, expenses, settings] = await Promise.all([
+      const [businesses, products, customers, sales, purchases, expenses, settings] = await Promise.all([
         api.fetchBusinesses(),
         api.fetchProducts(),
         api.fetchCustomers(),
         api.fetchSales(),
+        api.fetchPurchases().catch(() => []),
         api.fetchExpenses(),
         api.fetchSettings().catch(() => ({
           requireGSTIN: false,
@@ -73,6 +90,7 @@ const useStore = create((set, get) => ({
         products: products.map(normalizeProduct),
         customers: customers.map(normalizeCustomer),
         sales: sales.map(normalizeSale),
+        purchases: purchases.map(normalizePurchase),
         expenses: expenses.map(normalizeExpense),
         settings: Array.isArray(settings) && settings[0] ? settings[0] : settings,
         activeBusinessId: businesses?.[0]?.id || null,
@@ -220,6 +238,64 @@ const useStore = create((set, get) => ({
     return state.sales.filter(s => s.date.startsWith(today))
   },
 
+  // Purchases
+  addPurchase: async (purchase) => {
+    try {
+      const purchaseToSave = normalizePurchase({
+        ...purchase,
+        id: Date.now(),
+        date: purchase.date || new Date().toISOString(),
+      })
+      const newPurchase = normalizePurchase(await api.addPurchase(purchaseToSave))
+      set(state => ({ purchases: [...state.purchases, newPurchase] }))
+
+      // Update supplier balance if on credit. Negative balance means we owe the party.
+      if (purchaseToSave.supplierId && purchaseToSave.paymentMode === 'credit') {
+        const supplier = get().getCustomer(purchaseToSave.supplierId)
+        if (supplier) {
+          await get().updateCustomer(purchaseToSave.supplierId, {
+            ...supplier,
+            balance: toNumber(supplier.balance) - purchaseToSave.total,
+          })
+        }
+      }
+
+      // Update product stock
+      if (purchaseToSave.items) {
+        for (const item of purchaseToSave.items) {
+          const product = get().getProduct(item.productId)
+          if (product) {
+            await get().updateProduct(item.productId, {
+              ...product,
+              stock: toNumber(product.stock) + toNumber(item.qty),
+            })
+          }
+        }
+      }
+
+      return newPurchase
+    } catch (err) {
+      set({ error: err.message })
+      throw err
+    }
+  },
+
+  deletePurchase: async (id) => {
+    try {
+      await api.deletePurchase(id)
+      set(state => ({ purchases: state.purchases.filter(p => p.id !== id) }))
+    } catch (err) {
+      set({ error: err.message })
+      throw err
+    }
+  },
+
+  getPurchasesToday: () => {
+    const state = get()
+    const today = api.getTodayDateStr()
+    return state.purchases.filter(p => p.date.startsWith(today))
+  },
+
   // Expenses
   addExpense: async (expense) => {
     try {
@@ -288,6 +364,12 @@ const useStore = create((set, get) => ({
     return get()
       .getSalesToday()
       .reduce((sum, s) => sum + toNumber(s.total), 0)
+  },
+
+  getTotalTodaysPurchases: () => {
+    return get()
+      .getPurchasesToday()
+      .reduce((sum, p) => sum + toNumber(p.total), 0)
   },
 
   getTotalTodaysExpenses: () => {

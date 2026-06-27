@@ -7,6 +7,7 @@ export default function Dashboard() {
   const store = useStore()
   const [stats, setStats] = useState({
     salesToday: 0,
+    purchasesToday: 0,
     expensesToday: 0,
     receivables: 0,
     lowStockCount: 0,
@@ -15,14 +16,19 @@ export default function Dashboard() {
   useEffect(() => {
     setStats({
       salesToday: store.getTotalTodaysSales(),
+      purchasesToday: store.getTotalTodaysPurchases(),
       expensesToday: store.getTotalTodaysExpenses(),
       receivables: store.getTotalReceivables(),
       lowStockCount: store.getLowStockProducts(10).length,
     })
-  }, [store.sales, store.expenses, store.customers, store.products])
+  }, [store.sales, store.purchases, store.expenses, store.customers, store.products])
 
   const todaysSales = store.getSalesToday()
-  const recentTransactions = [...todaysSales].reverse().slice(0, 5)
+  const todaysPurchases = store.getPurchasesToday()
+  const recentTransactions = [
+    ...todaysSales.map(sale => ({ ...sale, transactionType: 'sale' })),
+    ...todaysPurchases.map(purchase => ({ ...purchase, transactionType: 'purchase' })),
+  ].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5)
   const formatMoney = value => `₹${toNumber(value).toFixed(2)}`
 
   const StatCard = ({ icon: Icon, title, value, color = 'sky' }) => (
@@ -49,8 +55,8 @@ export default function Dashboard() {
         />
         <StatCard
           icon={TrendingUp}
-          title="Expenses Today"
-          value={formatMoney(stats.expensesToday)}
+          title="Purchases Today"
+          value={formatMoney(stats.purchasesToday)}
           color="red"
         />
         <StatCard
@@ -90,7 +96,7 @@ export default function Dashboard() {
           <div className="space-y-2">
             <div className="flex justify-between text-xs">
               <span>Transactions</span>
-              <span className="font-bold">{todaysSales.length}</span>
+              <span className="font-bold">{todaysSales.length + todaysPurchases.length}</span>
             </div>
             <div className="flex justify-between text-xs">
               <span>Avg Order Value</span>
@@ -144,29 +150,34 @@ export default function Dashboard() {
               <thead>
                 <tr className="bg-gray-50 border-b">
                   <th className="px-4 py-2 text-left font-medium text-gray-600">Time</th>
-                  <th className="px-4 py-2 text-left font-medium text-gray-600">Customer</th>
+                  <th className="px-4 py-2 text-left font-medium text-gray-600">Party</th>
                   <th className="px-4 py-2 text-left font-medium text-gray-600">Mode</th>
                   <th className="px-4 py-2 text-right font-medium text-gray-600">Amount</th>
                 </tr>
               </thead>
               <tbody>
                 {recentTransactions.map((sale, idx) => {
-                  const customer = store.getCustomer(sale.customerId)
+                  const isPurchase = sale.transactionType === 'purchase'
+                  const customer = store.getCustomer(isPurchase ? sale.supplierId : sale.customerId)
                   return (
                     <tr key={idx} className="border-b hover:bg-gray-50">
                       <td className="px-4 py-2 text-xs text-gray-500">
                         {new Date(sale.date).toLocaleTimeString()}
                       </td>
-                      <td className="px-4 py-2 font-medium">{customer?.name || 'Unknown'}</td>
+                      <td className="px-4 py-2 font-medium">
+                        {customer?.name || (isPurchase ? 'Supplier' : 'Unknown')}
+                      </td>
                       <td className="px-4 py-2">
                         <span
                           className={`px-2 py-1 rounded text-xs font-medium ${
-                            sale.paymentMode === 'cash'
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-blue-100 text-blue-700'
+                            isPurchase
+                              ? 'bg-red-100 text-red-700'
+                              : sale.paymentMode === 'cash'
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-blue-100 text-blue-700'
                           }`}
                         >
-                          {sale.paymentMode === 'cash' ? 'Cash' : 'Credit'}
+                          {isPurchase ? 'Purchase' : sale.paymentMode === 'cash' ? 'Cash' : 'Credit'}
                         </span>
                       </td>
                       <td className="px-4 py-2 text-right font-semibold">{formatMoney(sale.total)}</td>

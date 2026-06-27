@@ -16,6 +16,7 @@ export default function Reports() {
   // Get today's transactions
   const dayBookTransactions = useMemo(() => {
     const sales = store.sales.filter(s => s.date.startsWith(selectedDate))
+    const purchases = store.purchases.filter(p => p.date.startsWith(selectedDate))
     const expenses = store.expenses.filter(e => e.date.startsWith(selectedDate))
 
     const allTxns = [
@@ -27,6 +28,15 @@ export default function Reports() {
         debit: toNumber(s.total),
         credit: 0,
         amount: toNumber(s.total),
+      })),
+      ...purchases.map(p => ({
+        id: `p-${p.id}`,
+        date: p.date,
+        type: 'purchase',
+        description: `Purchase (${store.getCustomer(p.supplierId)?.name || 'Supplier'})`,
+        debit: 0,
+        credit: toNumber(p.total),
+        amount: toNumber(p.total),
       })),
       ...expenses.map(e => ({
         id: `e-${e.id}`,
@@ -40,10 +50,11 @@ export default function Reports() {
     ].sort((a, b) => new Date(b.date) - new Date(a.date))
 
     return allTxns
-  }, [store.sales, store.expenses, selectedDate])
+  }, [store.sales, store.purchases, store.expenses, selectedDate])
 
   const summary = useMemo(() => {
     const totalSales = store.sales.reduce((sum, sale) => sum + toNumber(sale.total), 0)
+    const totalPurchases = store.purchases.reduce((sum, purchase) => sum + toNumber(purchase.total), 0)
     const totalExpenses = store.expenses.reduce((sum, expense) => sum + toNumber(expense.amount), 0)
     const inventoryValue = store.products.reduce(
       (sum, product) => sum + toNumber(product.price) * toNumber(product.stock),
@@ -54,11 +65,12 @@ export default function Reports() {
       (sum, customer) => sum + Math.max(0, toNumber(customer.balance)),
       0
     )
-    const netProfit = totalSales - totalExpenses
+    const netProfit = totalSales - totalPurchases - totalExpenses
     const averageSale = store.sales.length > 0 ? totalSales / store.sales.length : 0
 
     return {
       totalSales,
+      totalPurchases,
       totalExpenses,
       inventoryValue,
       totalUnits,
@@ -66,7 +78,7 @@ export default function Reports() {
       netProfit,
       averageSale,
     }
-  }, [store.products, store.customers, store.sales, store.expenses])
+  }, [store.products, store.customers, store.sales, store.purchases, store.expenses])
 
   // Calculate balance sheet
   const balanceSheet = useMemo(() => {
@@ -78,8 +90,9 @@ export default function Reports() {
     const totalPayables = store.customers.reduce((sum, c) => sum + Math.max(0, -toNumber(c.balance)), 0)
 
     const totalSales = store.sales.reduce((sum, s) => sum + toNumber(s.total), 0)
+    const totalPurchases = store.purchases.reduce((sum, p) => sum + toNumber(p.total), 0)
     const totalExpenses = store.expenses.reduce((sum, e) => sum + toNumber(e.amount), 0)
-    const netProfit = totalSales - totalExpenses
+    const netProfit = totalSales - totalPurchases - totalExpenses
 
     return {
       assets: [
@@ -91,7 +104,7 @@ export default function Reports() {
       ],
       equity: [{ name: 'Net Profit / (Loss)', amount: netProfit }],
     }
-  }, [store.products, store.customers, store.sales, store.expenses])
+  }, [store.products, store.customers, store.sales, store.purchases, store.expenses])
 
   const dayBookTotals = useMemo(() => {
     return {
@@ -214,10 +227,12 @@ export default function Reports() {
                             className={`px-2 py-1 rounded text-xs font-medium ${
                               txn.type === 'sale'
                                 ? 'bg-green-100 text-green-700'
-                                : 'bg-red-100 text-red-700'
+                                : txn.type === 'purchase'
+                                  ? 'bg-blue-100 text-blue-700'
+                                  : 'bg-red-100 text-red-700'
                             }`}
                           >
-                            {txn.type === 'sale' ? 'SALE' : 'EXPENSE'}
+                            {txn.type === 'sale' ? 'SALE' : txn.type === 'purchase' ? 'PURCHASE' : 'EXPENSE'}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right font-semibold">
@@ -268,6 +283,10 @@ export default function Reports() {
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Total Sales</span>
                 <span className="font-bold">{formatMoney(summary.totalSales)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Total Purchases</span>
+                <span className="font-bold">{formatMoney(summary.totalPurchases)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Total Expenses</span>
@@ -343,7 +362,7 @@ export default function Reports() {
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Total Transactions</span>
-                <span className="font-bold">{store.sales.length + store.expenses.length}</span>
+                <span className="font-bold">{store.sales.length + store.purchases.length + store.expenses.length}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Avg Transaction</span>

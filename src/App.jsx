@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar'
 import Topbar from './components/Topbar'
 import Dashboard from './pages/Dashboard'
 import SaleNew from './pages/SaleNew'
+import PurchaseNew from './pages/PurchaseNew'
 import Reports from './pages/Reports'
 import Settings from './pages/Settings'
 import ProductsManagement from './pages/ProductsManagement'
@@ -21,6 +22,7 @@ export default function App(){
             <Route path="/items" element={<ProductsManagement/>} />
             <Route path="/parties" element={<CustomersManagement/>} />
             <Route path="/sale/new" element={<SaleNew/>} />
+            <Route path="/purchase/new" element={<PurchaseNew/>} />
             <Route path="/reports" element={<Reports/>} />
             <Route path="/settings" element={<Settings/>} />
           </Routes>
