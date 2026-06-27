@@ -11,15 +11,59 @@
       "name": "Motor",
       "hsn": "111",
       "price": 100,
-      "stock": 19,
-      "id": "p1782412524780"
+      "stock": 37,
+      "id": "p1782412524780",
+      "purchasePrice": 0,
+      "sellingPrice": 100,
+      "gst": 0
     },
     {
       "name": "Controller",
       "hsn": "234",
       "price": 2300,
-      "stock": 10,
-      "id": "p1782484705309"
+      "stock": 29,
+      "id": "p1782484705309",
+      "purchasePrice": 0,
+      "sellingPrice": 2300,
+      "gst": 0
+    },
+    {
+      "name": "Head Light",
+      "hsn": "HL001",
+      "price": 150,
+      "stock": 25,
+      "id": "p1782561946897"
+    },
+    {
+      "name": "Back Horn",
+      "hsn": "BHO1",
+      "price": 90,
+      "stock": 50,
+      "id": "p1782562457057"
+    },
+    {
+      "stock": 700,
+      "unit": "grams",
+      "gst": 0,
+      "name": "Hydrolic oil",
+      "purchasePrice": 8,
+      "sellingPrice": 10,
+      "price": 10,
+      "category": "",
+      "description": "",
+      "id": "p1782564727162"
+    },
+    {
+      "stock": 100,
+      "unit": "pcs",
+      "gst": 0,
+      "name": "Converter",
+      "purchasePrice": 120,
+      "sellingPrice": 150,
+      "price": 150,
+      "category": "",
+      "description": "",
+      "id": "p1782565065043"
     }
   ],
   "customers": [
@@ -94,9 +138,172 @@
       "paymentMode": "cash",
       "taxMode": "exclusive",
       "id": 1782485347009
+    },
+    {
+      "date": "2026-06-27T13:03:03.435Z",
+      "customerId": "c1",
+      "items": [
+        {
+          "productId": "p1782412524780",
+          "qty": 1,
+          "price": 5000,
+          "discount": 0,
+          "tax": 0,
+          "amount": 5000
+        }
+      ],
+      "total": 5000,
+      "paymentMode": "cash",
+      "taxMode": "exclusive",
+      "id": 1782565383435
+    },
+    {
+      "date": "2026-06-27T00:00:00.000Z",
+      "customerId": "c1",
+      "phone": "8695847826",
+      "billingAddress": "VILL- JAVA, P.O- MAHATPUR, P.S- KOTWALI, DIST- NADIA, PIN- 741164",
+      "stateOfSupply": "",
+      "mechanicCharge": 600,
+      "received": 0,
+      "balance": 7900,
+      "items": [
+        {
+          "productId": "p1782412524780",
+          "qty": 1,
+          "unit": "pcs",
+          "price": 5000,
+          "discount": 0,
+          "tax": 0,
+          "amount": 5000
+        },
+        {
+          "productId": "p1782484705309",
+          "qty": 1,
+          "unit": "pcs",
+          "price": 2300,
+          "discount": 0,
+          "tax": 0,
+          "amount": 2300
+        }
+      ],
+      "total": 7900,
+      "paymentMode": "cash",
+      "taxMode": "inclusive",
+      "id": 1782566682011
     }
   ],
-  "purchases": [],
+  "purchases": [
+    {
+      "date": "2026-06-27T12:04:06.957Z",
+      "supplierId": "c1",
+      "items": [
+        {
+          "productId": "p1782412524780",
+          "qty": 20,
+          "price": 100,
+          "discount": 0,
+          "tax": 0,
+          "amount": 2000
+        },
+        {
+          "productId": "p1782484705309",
+          "qty": 10,
+          "price": 2300,
+          "discount": 0,
+          "tax": 0,
+          "amount": 23000
+        }
+      ],
+      "total": 25000,
+      "paymentMode": "cash",
+      "taxMode": "inclusive",
+      "id": 1782561846957
+    },
+    {
+      "date": "2026-06-27T12:07:13.660Z",
+      "supplierId": "c1782485326595",
+      "items": [
+        {
+          "productId": "p1782561946897",
+          "qty": 25,
+          "price": 100,
+          "discount": 0,
+          "tax": 0,
+          "amount": 2500
+        }
+      ],
+      "total": 2500,
+      "paymentMode": "cash",
+      "taxMode": "inclusive",
+      "id": 1782562033660
+    },
+    {
+      "date": "2026-06-27T12:52:57.429Z",
+      "supplierId": "",
+      "items": [
+        {
+          "productId": "p1782564727162",
+          "qty": 500,
+          "price": 0.8,
+          "unit": "grams",
+          "discount": 0,
+          "tax": 0,
+          "amount": 400
+        }
+      ],
+      "total": 400,
+      "paymentMode": "cash",
+      "taxMode": "exclusive",
+      "id": 1782564777430
+    },
+    {
+      "date": "2026-06-27T12:57:52.534Z",
+      "supplierId": "c1782485326595",
+      "items": [
+        {
+          "productId": "p1782565065043",
+          "qty": 100,
+          "price": 120,
+          "unit": "pcs",
+          "discount": 0,
+          "tax": 0,
+          "amount": 12000
+        }
+      ],
+      "total": 12000,
+      "paymentMode": "cash",
+      "taxMode": "exclusive",
+      "id": 1782565072534
+    },
+    {
+      "date": "2026-06-27T13:01:46.403Z",
+      "supplierId": "",
+      "items": [
+        {
+          "productId": "p1782484705309",
+          "qty": 10,
+          "price": 2300,
+          "unit": "pcs",
+          "discount": 0,
+          "tax": 0,
+          "amount": 23000
+        },
+        {
+          "productId": "p1782564727162",
+          "qty": 200,
+          "price": 0.8,
+          "unit": "grams",
+          "discount": 0,
+          "tax": 0,
+          "amount": 160
+        }
+      ],
+      "total": 23160,
+      "paymentMode": "cash",
+      "taxMode": "exclusive",
+      "id": 1782565306403
+    }
+  ],
   "expenses": [
     {
       "id": 1,

@@ -5,6 +5,9 @@ import { toNumber } from '../utils/math'
 const normalizeProduct = product => ({
   ...product,
   price: toNumber(product.price),
+  purchasePrice: toNumber(product.purchasePrice),
+  sellingPrice: toNumber(product.sellingPrice || product.price),
+  gst: toNumber(product.gst),
   stock: toNumber(product.stock),
 })
 
@@ -102,17 +105,50 @@ const useStore = create((set, get) => ({
   },
 
   // Products
+  refreshProducts: async () => {
+    try {
+      const products = await api.fetchProducts()
+      set({ products: products.map(normalizeProduct) })
+      return products
+    } catch (err) {
+      set({ error: err.message })
+      throw err
+    }
+  },
+
   addProduct: async (product) => {
+    const tempId = `tmp-${Date.now()}`
+    const optimisticProduct = normalizeProduct({
+      stock: 0,
+      unit: 'pcs',
+      gst: 0,
+      ...product,
+      id: tempId,
+      isSaving: true,
+    })
+    set(state => ({ products: [...state.products, optimisticProduct] }))
+
     try {
       const newProduct = normalizeProduct(await api.addProduct({
+        stock: 0,
+        unit: 'pcs',
+        gst: 0,
         ...product,
         price: toNumber(product.price),
+        purchasePrice: toNumber(product.purchasePrice),
+        sellingPrice: toNumber(product.sellingPrice || product.price),
+        gst: toNumber(product.gst),
         stock: toNumber(product.stock),
         id: `p${Date.now()}`,
       }))
-      set(state => ({ products: [...state.products, newProduct] }))
+      set(state => ({
+        products: state.products.map(p => (p.id === tempId ? newProduct : p)),
+      }))
       return newProduct
     } catch (err) {
+      set(state => ({
+        products: state.products.filter(p => p.id !== tempId),
+      }))
       set({ error: err.message })
       throw err
     }
