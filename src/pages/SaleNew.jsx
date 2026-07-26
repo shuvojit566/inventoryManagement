@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import DynamicItemTable from '../components/DynamicItemTable'
+import BillShareModal from '../components/BillShareModal'
 import { toNumber, fromCents } from '../utils/math'
+import { sanitizePhoneInput, isValidPhoneNumber } from '../utils/phone'
 import useStore from '../store/useStore'
-import { AlertCircle, Check } from 'lucide-react'
+import { AlertCircle, Check, Printer, Send } from 'lucide-react'
+import { printBill, formatBillForShare, generateBillShareURL } from '../utils/billShare'
 
 export default function SaleNew() {
   const [taxInclusive, setTaxInclusive] = useState(false)
@@ -20,6 +23,9 @@ export default function SaleNew() {
   const [resetKey, setResetKey] = useState(0)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState(null)
+  const [errors, setErrors] = useState({})
+  const [lastSavedSale, setLastSavedSale] = useState(null)
+  const [shareModalOpen, setShareModalOpen] = useState(false)
   const store = useStore()
 
   const selectedCustomerRecord = store.getCustomer(selectedCustomer)
@@ -31,8 +37,47 @@ export default function SaleNew() {
   const balanceAmount = Math.max(0, finalTotal - toNumber(receivedAmount))
 
   useEffect(() => {
-    setPhone(selectedCustomerRecord?.phone || '')
+    setPhone(sanitizePhoneInput(selectedCustomerRecord?.phone || ''))
   }, [selectedCustomerRecord?.id])
+
+  const handlePrintLastSale = () => {
+    if (lastSavedSale) {
+      const formattedBill = formatBillForShare(lastSavedSale, {
+        products: store.products,
+        customers: store.customers,
+        businesses: store.businesses,
+      })
+      printBill(formattedBill)
+    }
+  }
+
+  const handleOpenShareModal = () => {
+    setShareModalOpen(true)
+  }
+
+  const handleCloseShareModal = () => {
+    setShareModalOpen(false)
+  }
+
+  const handleNewSale = () => {
+    resetSaleForm()
+    setLastSavedSale(null)
+    setMessage(null)
+  }
+
+  function resetSaleForm() {
+    setItems([])
+    setSubtotalC(0)
+    setSelectedCustomer('')
+    setPhone('')
+    setBillingAddress('')
+    setStateOfSupply('')
+    setMechanicCharge(0)
+    setReceivedAmount(0)
+    setPaymentMode('cash')
+    setResetKey(key => key + 1)
+    setErrors({})
+  }
 
   async function onSave() {
     if (items.length === 0 || items.every(item => !item.productId)) {
@@ -45,6 +90,13 @@ export default function SaleNew() {
       return
     }
 
+    if (!isValidPhoneNumber(phone)) {
+      setErrors({ phone: 'Phone number must be exactly 10 digits' })
+      setMessage({ type: 'error', text: 'Please enter a valid 10-digit phone number' })
+      return
+    }
+
+    setErrors({})
     setLoading(true)
     try {
       if (store.settings.stopOnNegativeStock) {
@@ -87,21 +139,15 @@ export default function SaleNew() {
       }
 
       await store.addSale(sale)
+      
+      // Store the saved sale for print/share
+      const savedSale = {
+        ...sale,
+        id: invoiceNo,
+      }
+      setLastSavedSale(savedSale)
+      
       setMessage({ type: 'success', text: `Sale saved successfully! Invoice: ${invoiceNo}` })
-
-      setTimeout(() => {
-        setItems([])
-        setSubtotalC(0)
-        setSelectedCustomer('')
-        setPhone('')
-        setBillingAddress('')
-        setStateOfSupply('')
-        setMechanicCharge(0)
-        setReceivedAmount(0)
-        setPaymentMode('cash')
-        setResetKey(key => key + 1)
-        setMessage(null)
-      }, 2000)
     } catch (err) {
       setMessage({ type: 'error', text: `Error: ${err.message}` })
     } finally {
@@ -161,11 +207,20 @@ export default function SaleNew() {
             <div>
               <label className="text-xs font-semibold text-gray-600">Phone No.</label>
               <input
+                type="tel"
+                inputMode="numeric"
+                maxLength={10}
                 value={phone}
-                onChange={e => setPhone(e.target.value)}
-                className="w-full mt-1 px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                onChange={e => {
+                  setPhone(sanitizePhoneInput(e.target.value))
+                  if (errors.phone) setErrors({ ...errors, phone: null })
+                }}
+                className={`w-full mt-1 px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 ${
+                  errors.phone ? 'border-red-300' : ''
+                }`}
                 placeholder="Phone number"
               />
+              {errors.phone && <p className="text-xs text-red-600 mt-1">{errors.phone}</p>}
             </div>
 
             <div className="md:col-span-2">
@@ -225,18 +280,44 @@ export default function SaleNew() {
 
       {message && (
         <div
-          className={`rounded-lg p-4 flex items-start gap-3 ${
+          className={`rounded-lg p-4 flex items-center justify-between gap-3 ${
             message.type === 'error' ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'
           }`}
         >
-          {message.type === 'error' ? (
-            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-          ) : (
-            <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+          <div className="flex items-start gap-3">
+            {message.type === 'error' ? (
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            ) : (
+              <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+            )}
+            <p className={`text-sm ${message.type === 'error' ? 'text-red-800' : 'text-green-800'}`}>
+              {message.text}
+            </p>
+          </div>
+          {message.type === 'success' && lastSavedSale && (
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={handlePrintLastSale}
+                className="inline-flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm font-medium transition"
+              >
+                <Printer className="w-4 h-4" />
+                Print
+              </button>
+              <button
+                onClick={handleOpenShareModal}
+                className="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm font-medium transition"
+              >
+                <Send className="w-4 h-4" />
+                Share
+              </button>
+              <button
+                onClick={handleNewSale}
+                className="inline-flex items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-1 rounded text-sm font-medium transition"
+              >
+                New Sale
+              </button>
+            </div>
           )}
-          <p className={`text-sm ${message.type === 'error' ? 'text-red-800' : 'text-green-800'}`}>
-            {message.text}
-          </p>
         </div>
       )}
 
@@ -356,6 +437,19 @@ export default function SaleNew() {
             ))}
           </div>
         </div>
+      )}
+
+      {lastSavedSale && (
+        <BillShareModal
+          isOpen={shareModalOpen}
+          onClose={handleCloseShareModal}
+          sale={lastSavedSale}
+          storeData={{
+            products: store.products,
+            customers: store.customers,
+            businesses: store.businesses,
+          }}
+        />
       )}
     </div>
   )

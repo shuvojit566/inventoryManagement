@@ -1,8 +1,10 @@
 import React, { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import BalanceSheet from '../components/BalanceSheet'
+import BillShareModal from '../components/BillShareModal'
 import useStore from '../store/useStore'
 import { toNumber } from '../utils/math'
+import { printBill, formatBillForShare } from '../utils/billShare'
 import {
   BarChart3,
   Calendar,
@@ -36,6 +38,8 @@ export default function Reports() {
     return date.toISOString().split('T')[0]
   })
   const [toDate, setToDate] = useState(() => new Date().toISOString().split('T')[0])
+  const [shareModalOpen, setShareModalOpen] = useState(false)
+  const [selectedSale, setSelectedSale] = useState(null)
 
   const salesRows = useMemo(() => {
     const needle = query.trim().toLowerCase()
@@ -157,6 +161,25 @@ export default function Reports() {
     a.download = 'sale-invoices.csv'
     a.click()
     window.URL.revokeObjectURL(url)
+  }
+
+  const handlePrintBill = (sale) => {
+    const formattedBill = formatBillForShare(sale, {
+      products: store.products,
+      customers: store.customers,
+      businesses: store.businesses,
+    })
+    printBill(formattedBill)
+  }
+
+  const handleOpenShareModal = (sale) => {
+    setSelectedSale(sale)
+    setShareModalOpen(true)
+  }
+
+  const handleCloseShareModal = () => {
+    setShareModalOpen(false)
+    setSelectedSale(null)
   }
 
   return (
@@ -306,10 +329,24 @@ export default function Reports() {
                             <td className="px-3 py-3 text-right font-semibold">{formatMoney(sale.total)}</td>
                             <td className="px-3 py-3 text-right">{formatMoney(balance)}</td>
                             <td className="px-3 py-3">
-                              <div className="flex items-center gap-3 text-gray-500">
-                                <Printer className="w-4 h-4" />
-                                <Send className="w-4 h-4" />
-                                <MoreVertical className="w-4 h-4" />
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => handlePrintBill(sale)}
+                                  className="p-2 hover:bg-gray-200 rounded transition text-gray-600 hover:text-gray-900"
+                                  title="Print bill"
+                                >
+                                  <Printer className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleOpenShareModal(sale)}
+                                  className="p-2 hover:bg-gray-200 rounded transition text-gray-600 hover:text-gray-900"
+                                  title="Share bill"
+                                >
+                                  <Send className="w-4 h-4" />
+                                </button>
+                                <button className="p-2 hover:bg-gray-200 rounded transition text-gray-600 hover:text-gray-900">
+                                  <MoreVertical className="w-4 h-4" />
+                                </button>
                               </div>
                             </td>
                           </tr>
@@ -360,6 +397,19 @@ export default function Reports() {
               </tbody>
             </table>
           </div>
+
+          {selectedSale && (
+            <BillShareModal
+              isOpen={shareModalOpen}
+              onClose={handleCloseShareModal}
+              sale={selectedSale}
+              storeData={{
+                products: store.products,
+                customers: store.customers,
+                businesses: store.businesses,
+              }}
+            />
+          )}
         </div>
       )}
 

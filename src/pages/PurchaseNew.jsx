@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import DynamicItemTable from '../components/DynamicItemTable'
 import { toNumber, fromCents } from '../utils/math'
+import { sanitizePhoneInput, isValidPhoneNumber } from '../utils/phone'
 import useStore from '../store/useStore'
 import { AlertCircle, Check, X } from 'lucide-react'
 
@@ -128,6 +129,9 @@ export default function PurchaseNew() {
     if (!productForm.name.trim()) errors.name = 'Product name is required'
     if (!productForm.partyId && !showNewPartyForm) errors.partyId = 'Please select a party'
     if (showNewPartyForm && !partyForm.name.trim()) errors.partyName = 'Party name is required'
+    if (showNewPartyForm && partyForm.phone.trim() && !isValidPhoneNumber(partyForm.phone)) {
+      errors.partyPhone = 'Phone number must be exactly 10 digits'
+    }
     if (productForm.purchasePrice === '' || !Number.isFinite(purchasePrice) || purchasePrice < 0) {
       errors.purchasePrice = 'Purchase price is required'
     }
@@ -352,11 +356,19 @@ export default function PurchaseNew() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
                     <input
                       type="tel"
+                      inputMode="numeric"
+                      maxLength={10}
                       value={partyForm.phone}
-                      onChange={e => setPartyForm({ ...partyForm, phone: e.target.value })}
-                      className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      onChange={e => {
+                        setPartyForm({ ...partyForm, phone: sanitizePhoneInput(e.target.value) })
+                        if (productErrors.partyPhone) setProductErrors({ ...productErrors, partyPhone: null })
+                      }}
+                      className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-sky-500 ${
+                        productErrors.partyPhone ? 'border-red-300' : ''
+                      }`}
                       placeholder="Optional"
                     />
+                    {productErrors.partyPhone && <p className="text-xs text-red-600 mt-1">{productErrors.partyPhone}</p>}
                   </div>
                 </div>
               )}

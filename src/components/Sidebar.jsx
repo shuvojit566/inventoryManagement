@@ -1,11 +1,12 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Home, Users, Box, FileText, ShoppingCart, BarChart2, Settings as SettingsIcon } from 'lucide-react'
+import Logo from './Logo'
 
 const sections = [
   { title: 'Dashboard', icon: Home, to: '/' },
   { title: 'Products', icon: Box, to: '/items' },
-  { title: 'Customers', icon: Users, to: '/parties' },
+  { title: 'Parties', icon: Users, to: '/parties' },
   { title: 'New Sale', icon: FileText, to: '/sale/new' },
   { title: 'New Purchase', icon: ShoppingCart, to: '/purchase/new' },
   { title: 'Reports', icon: BarChart2, to: '/reports' },
@@ -17,7 +18,7 @@ export default function Sidebar() {
   return (
     <aside className="w-64 bg-white border-r h-screen sticky top-0 flex flex-col">
       <div className="p-4 border-b">
-        <h1 className="text-lg font-bold text-gray-900">📊 GST ERP</h1>
+        <h1 className="text-lg font-bold text-gray-900">📊 EasyInventory</h1>
         <p className="text-xs text-gray-500 mt-1">Inventory Management</p>
       </div>
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto">

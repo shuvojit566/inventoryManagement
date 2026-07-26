@@ -8,318 +8,313 @@
   ],
   "products": [
     {
-      "name": "Motor",
-      "hsn": "111",
-      "price": 100,
-      "stock": 37,
-      "id": "p1782412524780",
-      "purchasePrice": 0,
-      "sellingPrice": 100,
-      "gst": 0
-    },
-    {
-      "name": "Controller",
-      "hsn": "234",
-      "price": 2300,
-      "stock": 29,
-      "id": "p1782484705309",
-      "purchasePrice": 0,
-      "sellingPrice": 2300,
-      "gst": 0
-    },
-    {
-      "name": "Head Light",
-      "hsn": "HL001",
-      "price": 150,
-      "stock": 25,
-      "id": "p1782561946897"
-    },
-    {
-      "name": "Back Horn",
-      "hsn": "BHO1",
-      "price": 90,
-      "stock": 50,
-      "id": "p1782562457057"
-    },
-    {
-      "stock": 700,
-      "unit": "grams",
-      "gst": 0,
-      "name": "Hydrolic oil",
-      "purchasePrice": 8,
-      "sellingPrice": 10,
-      "price": 10,
-      "category": "",
-      "description": "",
-      "id": "p1782564727162"
-    },
-    {
-      "stock": 100,
+      "stock": 90,
       "unit": "pcs",
       "gst": 0,
-      "name": "Converter",
-      "purchasePrice": 120,
+      "name": "Controller 999",
+      "purchasePrice": 2500,
+      "sellingPrice": 3500,
+      "price": 3500,
+      "category": "",
+      "description": "",
+      "id": "p1782567534669"
+    },
+    {
+      "stock": 18,
+      "unit": "pcs",
+      "gst": 0,
+      "name": "Motor",
+      "purchasePrice": 4500,
+      "sellingPrice": 5500,
+      "price": 5500,
+      "category": "",
+      "description": "",
+      "id": "p1782567616792"
+    },
+    {
+      "stock": 87,
+      "unit": "pcs",
+      "gst": 0,
+      "name": "Fog Light",
+      "purchasePrice": 100,
       "sellingPrice": 150,
       "price": 150,
       "category": "",
       "description": "",
-      "id": "p1782565065043"
+      "id": "p1785055276298"
     }
   ],
   "customers": [
     {
-      "id": "c1",
-      "name": "Ravi",
-      "phone": "9999999999",
-      "balance": 0
-    },
-    {
-      "id": "c2",
-      "name": "Priya",
-      "phone": "8888888888",
-      "balance": 5000
-    },
-    {
-      "id": "c3",
-      "name": "Amit",
-      "phone": "7777777777",
-      "balance": -2000
-    },
-    {
       "name": "Khushi E-Rickshaw",
-      "phone": "86854565252",
+      "phone": "8956485897",
       "balance": 0,
-      "id": "c1782485326595"
+      "id": "c1782567489167"
+    },
+    {
+      "name": "GY",
+      "phone": "584588554454",
+      "balance": 0,
+      "id": "c1785052705441"
+    },
+    {
+      "name": "7 Horn",
+      "phone": "89759856",
+      "balance": 0,
+      "id": "c1785055276261"
+    },
+    {
+      "name": "Khushi",
+      "phone": "56854565485",
+      "balance": 0,
+      "type": "purchased",
+      "id": "c1785055588304"
+    },
+    {
+      "name": "daly bms",
+      "phone": "8695847859",
+      "balance": 0,
+      "type": "purchased",
+      "id": "c1785056403787"
     }
   ],
   "sales": [
     {
-      "id": 1,
-      "date": "2024-01-15T10:30:00Z",
-      "customerId": "c1",
-      "items": [
-        {
-          "productId": "p1",
-          "qty": 2,
-          "price": 199,
-          "tax": 18
-        }
-      ],
-      "total": 470,
-      "paymentMode": "cash"
-    },
-    {
-      "id": 2,
-      "date": "2024-01-15T14:15:00Z",
-      "customerId": "c2",
-      "items": [
-        {
-          "productId": "p2",
-          "qty": 1,
-          "price": 299,
-          "tax": 12
-        }
-      ],
-      "total": 335,
-      "paymentMode": "credit"
-    },
-    {
-      "date": "2026-06-26T14:49:07.009Z",
-      "customerId": "c1",
-      "items": [
-        {
-          "productId": "p1782412524780",
-          "qty": 1,
-          "price": 100,
-          "tax": 0
-        }
-      ],
-      "total": 100,
-      "paymentMode": "cash",
-      "taxMode": "exclusive",
-      "id": 1782485347009
-    },
-    {
-      "date": "2026-06-27T13:03:03.435Z",
-      "customerId": "c1",
-      "items": [
-        {
-          "productId": "p1782412524780",
-          "qty": 1,
-          "price": 5000,
-          "discount": 0,
-          "tax": 0,
-          "amount": 5000
-        }
-      ],
-      "total": 5000,
-      "paymentMode": "cash",
-      "taxMode": "exclusive",
-      "id": 1782565383435
-    },
-    {
-      "date": "2026-06-27T00:00:00.000Z",
-      "customerId": "c1",
-      "phone": "8695847826",
+      "date": "2026-06-30T00:00:00.000Z",
+      "customerId": "c1782567489167",
+      "phone": "08695847826",
       "billingAddress": "VILL- JAVA, P.O- MAHATPUR, P.S- KOTWALI, DIST- NADIA, PIN- 741164",
-      "stateOfSupply": "",
-      "mechanicCharge": 600,
+      "stateOfSupply": "Punjab",
+      "mechanicCharge": 200,
       "received": 0,
-      "balance": 7900,
+      "balance": 3700,
       "items": [
         {
-          "productId": "p1782412524780",
+          "productId": "p1782567534669",
           "qty": 1,
           "unit": "pcs",
-          "price": 5000,
+          "price": 3500,
           "discount": 0,
           "tax": 0,
-          "amount": 5000
-        },
-        {
-          "productId": "p1782484705309",
-          "qty": 1,
-          "unit": "pcs",
-          "price": 2300,
-          "discount": 0,
-          "tax": 0,
-          "amount": 2300
+          "amount": 3500
         }
       ],
-      "total": 7900,
+      "total": 3700,
       "paymentMode": "cash",
       "taxMode": "inclusive",
-      "id": 1782566682011
+      "id": 1782806623137
+    },
+    {
+      "date": "2026-07-26T00:00:00.000Z",
+      "customerId": "c1782567489167",
+      "phone": "08695847826",
+      "billingAddress": "VILL- JAVA, P.O- MAHATPUR, P.S- KOTWALI, DIST- NADIA, PIN- 741164",
+      "stateOfSupply": "Delhi",
+      "mechanicCharge": 0,
+      "received": 0,
+      "balance": 5500,
+      "items": [
+        {
+          "productId": "p1782567616792",
+          "qty": 1,
+          "unit": "pcs",
+          "price": 5500,
+          "discount": 0,
+          "tax": 0,
+          "amount": 5500
+        }
+      ],
+      "total": 5500,
+      "paymentMode": "cash",
+      "taxMode": "exclusive",
+      "id": 1785055025849
+    },
+    {
+      "date": "2026-07-26T00:00:00.000Z",
+      "customerId": "c1782567489167",
+      "phone": "8695847826",
+      "billingAddress": "VILL- JAVA, P.O- MAHATPUR, P.S- KOTWALI, DIST- NADIA, PIN- 741164",
+      "stateOfSupply": "Delhi",
+      "mechanicCharge": 100,
+      "received": 0,
+      "balance": 5600,
+      "items": [
+        {
+          "productId": "p1782567616792",
+          "qty": 1,
+          "unit": "pcs",
+          "price": 5500,
+          "discount": 0,
+          "tax": 0,
+          "amount": 5500
+        }
+      ],
+      "total": 5600,
+      "paymentMode": "cash",
+      "taxMode": "inclusive",
+      "id": 1785057040946
+    },
+    {
+      "date": "2026-07-26T00:00:00.000Z",
+      "customerId": "c1785052705441",
+      "phone": "8695847826",
+      "billingAddress": "VILL- JAVA, P.O- MAHATPUR, P.S- KOTWALI, DIST- NADIA, PIN- 741164",
+      "stateOfSupply": "Haryana",
+      "mechanicCharge": 0,
+      "received": 0,
+      "balance": 1500,
+      "items": [
+        {
+          "productId": "p1785055276298",
+          "qty": 10,
+          "unit": "pcs",
+          "price": 150,
+          "discount": 0,
+          "tax": 0,
+          "amount": 1500
+        }
+      ],
+      "total": 1500,
+      "paymentMode": "cash",
+      "taxMode": "exclusive",
+      "id": 1785057174761
+    },
+    {
+      "date": "2026-07-26T00:00:00.000Z",
+      "customerId": "c1785056403787",
+      "phone": "8695847859",
+      "billingAddress": "VILL- JAVA, P.O- MAHATPUR, P.S- KOTWALI, DIST- NADIA, PIN- 741164",
+      "stateOfSupply": "",
+      "mechanicCharge": 0,
+      "received": 0,
+      "balance": 150,
+      "items": [
+        {
+          "productId": "p1785055276298",
+          "qty": 1,
+          "unit": "pcs",
+          "price": 150,
+          "discount": 0,
+          "tax": 0,
+          "amount": 150
+        }
+      ],
+      "total": 150,
+      "paymentMode": "cash",
+      "taxMode": "exclusive",
+      "id": 1785057195349
+    },
+    {
+      "date": "2026-07-26T00:00:00.000Z",
+      "customerId": "c1785055276261",
+      "phone": "8695847826",
+      "billingAddress": "",
+      "stateOfSupply": "",
+      "mechanicCharge": 0,
+      "received": 0,
+      "balance": 150,
+      "items": [
+        {
+          "productId": "p1785055276298",
+          "qty": 1,
+          "unit": "pcs",
+          "price": 150,
+          "discount": 0,
+          "tax": 0,
+          "amount": 150
+        }
+      ],
+      "total": 150,
+      "paymentMode": "cash",
+      "taxMode": "exclusive",
+      "id": 1785057243188
+    },
+    {
+      "date": "2026-07-26T00:00:00.000Z",
+      "customerId": "c1782567489167",
+      "phone": "8956485897",
+      "billingAddress": "",
+      "stateOfSupply": "",
+      "mechanicCharge": 0,
+      "received": 0,
+      "balance": 150,
+      "items": [
+        {
+          "productId": "p1785055276298",
+          "qty": 1,
+          "unit": "pcs",
+          "price": 150,
+          "discount": 0,
+          "tax": 0,
+          "amount": 150
+        }
+      ],
+      "total": 150,
+      "paymentMode": "cash",
+      "taxMode": "exclusive",
+      "id": 1785057567329
     }
   ],
   "purchases": [
     {
-      "date": "2026-06-27T12:04:06.957Z",
-      "supplierId": "c1",
+      "date": "2026-06-27T13:39:18.929Z",
+      "supplierId": "c1782567489167",
       "items": [
         {
-          "productId": "p1782412524780",
-          "qty": 20,
-          "price": 100,
-          "discount": 0,
-          "tax": 0,
-          "amount": 2000
-        },
-        {
-          "productId": "p1782484705309",
+          "productId": "p1782567534669",
           "qty": 10,
-          "price": 2300,
+          "price": 2500,
+          "unit": "pcs",
           "discount": 0,
           "tax": 0,
-          "amount": 23000
+          "amount": 25000
         }
       ],
       "total": 25000,
       "paymentMode": "cash",
       "taxMode": "inclusive",
-      "id": 1782561846957
+      "id": 1782567558930
     },
     {
-      "date": "2026-06-27T12:07:13.660Z",
-      "supplierId": "c1782485326595",
+      "date": "2026-06-27T13:40:20.617Z",
+      "supplierId": "c1782567489167",
       "items": [
         {
-          "productId": "p1782561946897",
-          "qty": 25,
-          "price": 100,
+          "productId": "p1782567616792",
+          "qty": 20,
+          "price": 4500,
+          "unit": "pcs",
           "discount": 0,
           "tax": 0,
-          "amount": 2500
+          "amount": 90000
         }
       ],
-      "total": 2500,
-      "paymentMode": "cash",
-      "taxMode": "inclusive",
-      "id": 1782562033660
-    },
-    {
-      "date": "2026-06-27T12:52:57.429Z",
-      "supplierId": "",
-      "items": [
-        {
-          "productId": "p1782564727162",
-          "qty": 500,
-          "price": 0.8,
-          "unit": "grams",
-          "discount": 0,
-          "tax": 0,
-          "amount": 400
-        }
-      ],
-      "total": 400,
+      "total": 90000,
       "paymentMode": "cash",
       "taxMode": "exclusive",
-      "id": 1782564777430
+      "id": 1782567620617
     },
     {
-      "date": "2026-06-27T12:57:52.534Z",
-      "supplierId": "c1782485326595",
+      "date": "2026-07-26T08:41:27.232Z",
+      "supplierId": "c1785055276261",
       "items": [
         {
-          "productId": "p1782565065043",
+          "productId": "p1785055276298",
           "qty": 100,
-          "price": 120,
+          "price": 100,
           "unit": "pcs",
           "discount": 0,
           "tax": 0,
-          "amount": 12000
+          "amount": 10000
         }
       ],
-      "total": 12000,
+      "total": 10000,
       "paymentMode": "cash",
       "taxMode": "exclusive",
-      "id": 1782565072534
-    },
-    {
-      "date": "2026-06-27T13:01:46.403Z",
-      "supplierId": "",
-      "items": [
-        {
-          "productId": "p1782484705309",
-          "qty": 10,
-          "price": 2300,
-          "unit": "pcs",
-          "discount": 0,
-          "tax": 0,
-          "amount": 23000
-        },
-        {
-          "productId": "p1782564727162",
-          "qty": 200,
-          "price": 0.8,
-          "unit": "grams",
-          "discount": 0,
-          "tax": 0,
-          "amount": 160
-        }
-      ],
-      "total": 23160,
-      "paymentMode": "cash",
-      "taxMode": "exclusive",
-      "id": 1782565306403
+      "id": 1785055287232
     }
   ],
-  "expenses": [
-    {
-      "id": 1,
-      "date": "2024-01-15T09:00:00Z",
-      "description": "Office Rent",
-      "amount": 15000,
-      "category": "rent"
-    },
-    {
-      "id": 2,
-      "date": "2024-01-15T11:30:00Z",
-      "description": "Supplies",
-      "amount": 2000,
-      "category": "supplies"
-    }
-  ],
+  "expenses": [],
   "settings": {
     "id": "default",
     "requireGSTIN": false,

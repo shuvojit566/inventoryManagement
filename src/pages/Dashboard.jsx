@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import useStore from '../store/useStore'
 import { toNumber } from '../utils/math'
-import { TrendingUp, Package, Users, DollarSign, AlertCircle } from 'lucide-react'
+import { TrendingUp, Package, Users, IndianRupee, AlertCircle } from 'lucide-react'
 
 export default function Dashboard() {
   const store = useStore()
@@ -48,7 +49,7 @@ export default function Dashboard() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <StatCard
-          icon={DollarSign}
+          icon={IndianRupee}
           title="Sales Today"
           value={formatMoney(stats.salesToday)}
           color="green"
@@ -122,6 +123,33 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+       <Link
+         to="/sales"
+         className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-4 hover:shadow-md transition"
+       >
+         <div>
+           <p className="text-sm text-gray-600">View Sales</p>
+           <p className="text-xl font-semibold text-slate-900">All transactions</p>
+         </div>
+         <div className="rounded-full bg-sky-50 p-3 text-sky-600">
+           <IndianRupee className="w-5 h-5" />
+         </div>
+       </Link>
+       <Link
+         to="/purchases"
+         className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-4 hover:shadow-md transition"
+       >
+         <div>
+           <p className="text-sm text-gray-600">View Purchases</p>
+           <p className="text-xl font-semibold text-slate-900">Supplier records</p>
+         </div>
+         <div className="rounded-full bg-amber-50 p-3 text-amber-600">
+           <Package className="w-5 h-5" />
+         </div>
+       </Link>
       </div>
 
       {/* Alerts */}
