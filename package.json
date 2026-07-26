@@ -6,7 +6,7 @@
     "dev": "vite",
     "build": "npx vite build",
     "preview": "vite preview",
-    "json-server": "json-server --watch db.json --port 4000"
+    "json-server": "node server.js"
   },
   "dependencies": {
     "html2pdf.js": "^0.14.0",

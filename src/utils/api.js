@@ -1,190 +1,309 @@
-// API utilities to communicate with json-server
-const API_BASE = 'http://localhost:4000'
+﻿const API_BASE = 'http://localhost:4000'
 
-// Businesses
-export async function fetchBusinesses() {
-  const res = await fetch(`${API_BASE}/businesses`)
-  return res.json()
+function getSavedSession() {
+  const raw = window.localStorage.getItem('inventory-session') || window.sessionStorage.getItem('inventory-session')
+  if (!raw) return null
+  try {
+    return JSON.parse(raw)
+  } catch (err) {
+    return null
+  }
+}
+
+function getAuthHeaders() {
+  const session = getSavedSession()
+  const userId = session?.id || session?.userId
+  return userId ? { Authorization: `Bearer ${userId}` } : {}
+}
+
+async function request(path, options = {}) {
+  const headers = {
+    ...getAuthHeaders(),
+    ...options.headers,
+  }
+
+  const init = {
+    ...options,
+    headers,
+  }
+
+  const response = await fetch(`${API_BASE}${path}`, init)
+  if (!response.ok) {
+    const errorText = await response.text()
+    let message = response.statusText
+    try {
+      const payload = JSON.parse(errorText)
+      message = payload.error || payload.message || message
+    } catch (err) {
+      if (errorText) message = errorText
+    }
+    throw new Error(message)
+  }
+
+  if (response.status === 204) {
+    return null
+  }
+
+  return response.json()
+}
+
+function buildQuery(params = {}) {
+  const query = Object.entries(params)
+    .filter(([, value]) => value !== undefined && value !== null && value !== '')
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+    .join('&')
+  return query ? `?${query}` : ''
+}
+
+export async function hashPassword(password) {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(password)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('')
+}
+
+export async function loginUser({ email, passwordHash }) {
+  return request('/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, passwordHash }),
+  })
+}
+
+export async function registerUser(payload) {
+  return request('/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function resetPassword(payload) {
+  return request('/reset-password', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function fetchBusinesses(userId) {
+  return request(`/businesses${buildQuery({ userId })}`)
 }
 
 export async function addBusiness(business) {
-  const res = await fetch(`${API_BASE}/businesses`, {
+  return request('/businesses', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(business),
   })
-  return res.json()
 }
 
-// Products
-export async function fetchProducts() {
-  const res = await fetch(`${API_BASE}/products`)
-  return res.json()
+export async function fetchProducts(userId) {
+  return request(`/products${buildQuery({ userId })}`)
 }
 
 export async function addProduct(product) {
-  const res = await fetch(`${API_BASE}/products`, {
+  return request('/products', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(product),
   })
-  return res.json()
 }
 
 export async function updateProduct(id, product) {
-  const res = await fetch(`${API_BASE}/products/${id}`, {
+  return request(`/products/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(product),
   })
-  return res.json()
 }
 
 export async function deleteProduct(id) {
-  await fetch(`${API_BASE}/products/${id}`, { method: 'DELETE' })
+  return request(`/products/${id}`, { method: 'DELETE' })
 }
 
-// Customers
-export async function fetchCustomers() {
-  const res = await fetch(`${API_BASE}/customers`)
-  return res.json()
+export async function fetchCustomers(userId) {
+  return request(`/customers${buildQuery({ userId })}`)
 }
 
 export async function addCustomer(customer) {
-  const res = await fetch(`${API_BASE}/customers`, {
+  return request('/customers', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(customer),
   })
-  return res.json()
 }
 
 export async function updateCustomer(id, customer) {
-  const res = await fetch(`${API_BASE}/customers/${id}`, {
+  return request(`/customers/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(customer),
   })
-  return res.json()
 }
 
-// Sales
-export async function fetchSales() {
-  const res = await fetch(`${API_BASE}/sales`)
-  return res.json()
+export async function fetchSales(userId) {
+  return request(`/sales${buildQuery({ userId })}`)
 }
 
 export async function addSale(sale) {
-  const res = await fetch(`${API_BASE}/sales`, {
+  return request('/sales', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(sale),
   })
-  return res.json()
 }
 
 export async function fetchSaleById(id) {
-  const res = await fetch(`${API_BASE}/sales/${id}`)
-  return res.json()
+  return request(`/sales/${id}`)
 }
 
 export async function updateSale(id, sale) {
-  const res = await fetch(`${API_BASE}/sales/${id}`, {
+  return request(`/sales/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(sale),
   })
-  return res.json()
 }
 
 export async function deleteSale(id) {
-  await fetch(`${API_BASE}/sales/${id}`, { method: 'DELETE' })
+  return request(`/sales/${id}`, { method: 'DELETE' })
 }
 
-// Purchases
-export async function fetchPurchases() {
-  const res = await fetch(`${API_BASE}/purchases`)
-  return res.json()
+export async function fetchPurchases(userId) {
+  return request(`/purchases${buildQuery({ userId })}`)
 }
 
 export async function addPurchase(purchase) {
-  const res = await fetch(`${API_BASE}/purchases`, {
+  return request('/purchases', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(purchase),
   })
-  return res.json()
 }
 
 export async function fetchPurchaseById(id) {
-  const res = await fetch(`${API_BASE}/purchases/${id}`)
-  return res.json()
+  return request(`/purchases/${id}`)
 }
 
 export async function updatePurchase(id, purchase) {
-  const res = await fetch(`${API_BASE}/purchases/${id}`, {
+  return request(`/purchases/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(purchase),
   })
-  return res.json()
 }
 
 export async function deletePurchase(id) {
-  await fetch(`${API_BASE}/purchases/${id}`, { method: 'DELETE' })
+  return request(`/purchases/${id}`, { method: 'DELETE' })
 }
 
-// Expenses
-export async function fetchExpenses() {
-  const res = await fetch(`${API_BASE}/expenses`)
-  return res.json()
+export async function fetchExpenses(userId) {
+  return request(`/expenses${buildQuery({ userId })}`)
 }
 
 export async function addExpense(expense) {
-  const res = await fetch(`${API_BASE}/expenses`, {
+  return request('/expenses', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(expense),
   })
-  return res.json()
 }
 
 export async function updateExpense(id, expense) {
-  const res = await fetch(`${API_BASE}/expenses/${id}`, {
+  return request(`/expenses/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(expense),
   })
-  return res.json()
 }
 
 export async function deleteExpense(id) {
-  await fetch(`${API_BASE}/expenses/${id}`, { method: 'DELETE' })
+  return request(`/expenses/${id}`, { method: 'DELETE' })
 }
 
-// Settings
-export async function fetchSettings() {
-  const res = await fetch(`${API_BASE}/settings`)
-  return res.json()
+export async function fetchSettings(userId) {
+  return request(`/settings${buildQuery({ userId })}`)
 }
 
 export async function saveSettings(settings) {
-  const res = await fetch(`${API_BASE}/settings/default`, {
-    method: 'PUT',
+  if (settings?.id) {
+    return request(`/settings/${settings.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(settings),
+    })
+  }
+  return request('/settings', {
+    method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(settings),
   })
-  return res.json()
 }
 
-// Helper to fetch sales for a specific date
-export async function fetchSalesByDate(dateStr) {
-  const res = await fetch(`${API_BASE}/sales?_sort=date&_order=desc`)
-  const sales = await res.json()
-  return sales.filter(s => s.date.startsWith(dateStr))
+export async function fetchUser(id) {
+  return request(`/users/${id}`)
 }
 
-// Helper to get today's total
+export async function updateUser(id, user) {
+  return request(`/users/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(user),
+  })
+}
+
+export async function deleteAccount(password) {
+  return request('/account', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password }),
+  })
+}
+
+export async function adminLogin({ email, passwordHash }) {
+  return request('/admin-login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, passwordHash }),
+  })
+}
+
+export async function fetchAllUsers(page = 1, limit = 10) {
+  return request(`/admin/users${buildQuery({ page, limit })}`)
+}
+
+export async function searchUsers(searchTerm) {
+  return request(`/admin/users/search/${encodeURIComponent(searchTerm)}`)
+}
+
+export async function getUserDetails(userId) {
+  return request(`/admin/users/${userId}`)
+}
+
+export async function updateUserStatus(userId, status) {
+  return request(`/admin/users/${userId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status }),
+  })
+}
+
+export async function resetUserPassword(userId) {
+  return request(`/admin/users/${userId}/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  })
+}
+
+export async function deleteUser(userId) {
+  return request(`/admin/users/${userId}`, { method: 'DELETE' })
+}
+
+export async function getDashboardStats() {
+  return request('/admin/dashboard-stats')
+}
+
 export function getTodayDateStr() {
   const d = new Date()
   return d.toISOString().split('T')[0]

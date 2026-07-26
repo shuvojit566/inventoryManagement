@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+﻿import React, { useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
@@ -7,7 +7,10 @@ import './styles/index.css'
 
 function Root() {
   useEffect(() => {
-    useStore.getState().initStore()
+    const currentUser = useStore.getState().restoreSession()
+    if (currentUser) {
+      useStore.getState().initStore()
+    }
   }, [])
 
   return (

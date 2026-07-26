@@ -1,4 +1,4 @@
-import create from 'zustand'
+﻿import create from 'zustand'
 import * as api from '../utils/api'
 import { toNumber } from '../utils/math'
 import { sanitizePhoneInput } from '../utils/phone'
@@ -77,6 +77,14 @@ const normalizeExpense = expense => ({
   amount: toNumber(expense.amount),
 })
 
+const DEFAULT_SETTINGS = {
+  requireGSTIN: false,
+  stopOnNegativeStock: true,
+  passcodeLock: false,
+  auditTrail: true,
+  printTheme: 'GST Theme 1',
+}
+
 const useStore = create((set, get) => ({
   businesses: [],
   activeBusinessId: null,
@@ -85,35 +93,166 @@ const useStore = create((set, get) => ({
   sales: [],
   purchases: [],
   expenses: [],
-  settings: {
-    requireGSTIN: false,
-    stopOnNegativeStock: true,
-    passcodeLock: false,
-    auditTrail: true,
-    printTheme: 'GST Theme 1',
-  },
+  settings: DEFAULT_SETTINGS,
+  currentUser: null,
+  authError: null,
+  authLoading: false,
   loading: false,
   error: null,
 
-  // Initialize store from database
-  initStore: async () => {
-    set({ loading: true })
+  restoreSession: () => {
+    const raw = window.localStorage.getItem('inventory-session') || window.sessionStorage.getItem('inventory-session')
+    if (!raw) return null
     try {
+      const currentUser = JSON.parse(raw)
+      set({ currentUser, authError: null })
+      return currentUser
+    } catch {
+      return null
+    }
+  },
+
+  saveSession: (user, remember = true) => {
+    const raw = JSON.stringify(user)
+    if (remember) {
+      window.localStorage.setItem('inventory-session', raw)
+      window.sessionStorage.removeItem('inventory-session')
+    } else {
+      window.sessionStorage.setItem('inventory-session', raw)
+      window.localStorage.removeItem('inventory-session')
+    }
+    set({ currentUser: user, authError: null })
+  },
+
+  clearSession: () => {
+    window.localStorage.removeItem('inventory-session')
+    window.sessionStorage.removeItem('inventory-session')
+    set({
+      currentUser: null,
+      businesses: [],
+      activeBusinessId: null,
+      products: [],
+      customers: [],
+      sales: [],
+      purchases: [],
+      expenses: [],
+      settings: DEFAULT_SETTINGS,
+      authError: null,
+      authLoading: false,
+      loading: false,
+      error: null,
+    })
+  },
+
+  login: async ({ email, password, remember }) => {
+    set({ authLoading: true, authError: null })
+    try {
+      const passwordHash = await api.hashPassword(password)
+      const user = await api.loginUser({ email, passwordHash })
+      get().saveSession(user, remember)
+      await get().initStore()
+      return user
+    } catch (err) {
+      set({ authError: err.message })
+      throw err
+    } finally {
+      set({ authLoading: false })
+    }
+  },
+
+  register: async (payload) => {
+    set({ authLoading: true, authError: null })
+    try {
+      if (payload.password !== payload.confirmPassword) {
+        throw new Error('Passwords do not match.')
+      }
+      const user = await api.registerUser(payload)
+      get().saveSession(user, payload.remember)
+      await get().initStore()
+      return user
+    } catch (err) {
+      set({ authError: err.message })
+      throw err
+    } finally {
+      set({ authLoading: false })
+    }
+  },
+
+  logout: () => {
+    get().clearSession()
+  },
+
+  updateProfile: async (updates) => {
+    try {
+      const currentUser = get().currentUser
+      if (!currentUser?.id) {
+        throw new Error('Not authenticated.')
+      }
+      const updatedUser = await api.updateUser(currentUser.id, updates)
+      const mergedUser = { ...currentUser, ...updatedUser }
+      get().saveSession(mergedUser, Boolean(window.localStorage.getItem('inventory-session')))
+      return mergedUser
+    } catch (err) {
+      set({ error: err.message })
+      throw err
+    }
+  },
+
+  changePassword: async ({ currentPassword, newPassword, confirmPassword }) => {
+    try {
+      const currentUser = get().currentUser
+      if (!currentUser?.email || !currentUser?.phone) {
+        throw new Error('Missing current account details.')
+      }
+      if (newPassword !== confirmPassword) {
+        throw new Error('New passwords do not match.')
+      }
+      await api.resetPassword({
+        email: currentUser.email,
+        phone: currentUser.phone,
+        newPassword,
+      })
+      return true
+    } catch (err) {
+      set({ error: err.message })
+      throw err
+    }
+  },
+
+  deleteAccount: async (password) => {
+    try {
+      if (!password) {
+        throw new Error('Password is required.')
+      }
+      await api.deleteAccount(password)
+      get().clearSession()
+      return true
+    } catch (err) {
+      set({ error: err.message })
+      throw err
+    }
+  },
+
+  initStore: async () => {
+    set({ loading: true, error: null })
+    const currentUser = get().currentUser
+    if (!currentUser?.id) {
+      set({ loading: false })
+      return
+    }
+
+    try {
+      const userId = currentUser.id
       const [businesses, products, customers, sales, purchases, expenses, settings] = await Promise.all([
-        api.fetchBusinesses(),
-        api.fetchProducts(),
-        api.fetchCustomers(),
-        api.fetchSales(),
-        api.fetchPurchases().catch(() => []),
-        api.fetchExpenses(),
-        api.fetchSettings().catch(() => ({
-          requireGSTIN: false,
-          stopOnNegativeStock: true,
-          passcodeLock: false,
-          auditTrail: true,
-          printTheme: 'GST Theme 1',
-        })),
+        api.fetchBusinesses(userId),
+        api.fetchProducts(userId),
+        api.fetchCustomers(userId),
+        api.fetchSales(userId),
+        api.fetchPurchases(userId).catch(() => []),
+        api.fetchExpenses(userId),
+        api.fetchSettings(userId).catch(() => DEFAULT_SETTINGS),
       ])
+
       set({
         businesses,
         products: products.map(normalizeProduct),
@@ -130,10 +269,9 @@ const useStore = create((set, get) => ({
     }
   },
 
-  // Products
   refreshProducts: async () => {
     try {
-      const products = await api.fetchProducts()
+      const products = await api.fetchProducts(get().currentUser?.id)
       set({ products: products.map(normalizeProduct) })
       return products
     } catch (err) {
@@ -167,14 +305,10 @@ const useStore = create((set, get) => ({
         stock: toNumber(product.stock),
         id: `p${Date.now()}`,
       }))
-      set(state => ({
-        products: state.products.map(p => (p.id === tempId ? newProduct : p)),
-      }))
+      set(state => ({ products: state.products.map(p => (p.id === tempId ? newProduct : p)) }))
       return newProduct
     } catch (err) {
-      set(state => ({
-        products: state.products.filter(p => p.id !== tempId),
-      }))
+      set(state => ({ products: state.products.filter(p => p.id !== tempId) }))
       set({ error: err.message })
       throw err
     }
@@ -183,9 +317,7 @@ const useStore = create((set, get) => ({
   updateProduct: async (id, product) => {
     try {
       const updated = normalizeProduct(await api.updateProduct(id, normalizeProduct(product)))
-      set(state => ({
-        products: state.products.map(p => (p.id === id ? updated : p)),
-      }))
+      set(state => ({ products: state.products.map(p => (p.id === id ? updated : p)) }))
       return updated
     } catch (err) {
       set({ error: err.message })
@@ -203,12 +335,8 @@ const useStore = create((set, get) => ({
     }
   },
 
-  getProduct: (id) => {
-    const state = get()
-    return state.products.find(p => p.id === id)
-  },
+  getProduct: (id) => get().products.find(p => p.id === id),
 
-  // Customers
   addCustomer: async (customer) => {
     try {
       const state = get()
@@ -239,9 +367,7 @@ const useStore = create((set, get) => ({
       }
 
       const updated = normalizeCustomer(await api.updateCustomer(id, normalizeCustomer(customer)))
-      set(state => ({
-        customers: state.customers.map(c => (c.id === id ? updated : c)),
-      }))
+      set(state => ({ customers: state.customers.map(c => (c.id === id ? updated : c)) }))
       return updated
     } catch (err) {
       set({ error: err.message })
@@ -249,12 +375,8 @@ const useStore = create((set, get) => ({
     }
   },
 
-  getCustomer: (id) => {
-    const state = get()
-    return state.customers.find(c => c.id === id)
-  },
+  getCustomer: (id) => get().customers.find(c => c.id === id),
 
-  // Sales
   addSale: async (sale) => {
     try {
       const saleToSave = normalizeSale({
@@ -264,8 +386,7 @@ const useStore = create((set, get) => ({
       })
       const newSale = normalizeSale(await api.addSale(saleToSave))
       set(state => ({ sales: [...state.sales, newSale] }))
-      
-      // Update customer balance if on credit
+
       if (saleToSave.customerId && saleToSave.paymentMode === 'credit') {
         const customer = get().getCustomer(saleToSave.customerId)
         if (customer) {
@@ -275,8 +396,7 @@ const useStore = create((set, get) => ({
           })
         }
       }
-      
-      // Update product stock
+
       if (saleToSave.items) {
         for (const item of saleToSave.items) {
           const product = get().getProduct(item.productId)
@@ -288,7 +408,7 @@ const useStore = create((set, get) => ({
           }
         }
       }
-      
+
       return newSale
     } catch (err) {
       set({ error: err.message })
@@ -307,12 +427,10 @@ const useStore = create((set, get) => ({
   },
 
   getSalesToday: () => {
-    const state = get()
     const today = api.getTodayDateStr()
-    return state.sales.filter(s => s.date.startsWith(today))
+    return get().sales.filter(s => s.date.startsWith(today))
   },
 
-  // Purchases
   addPurchase: async (purchase) => {
     try {
       const purchaseToSave = normalizePurchase({
@@ -323,7 +441,6 @@ const useStore = create((set, get) => ({
       const newPurchase = normalizePurchase(await api.addPurchase(purchaseToSave))
       set(state => ({ purchases: [...state.purchases, newPurchase] }))
 
-      // Update supplier balance if on credit. Negative balance means we owe the party.
       if (purchaseToSave.supplierId && purchaseToSave.paymentMode === 'credit') {
         const supplier = get().getCustomer(purchaseToSave.supplierId)
         if (supplier) {
@@ -334,7 +451,6 @@ const useStore = create((set, get) => ({
         }
       }
 
-      // Update product stock
       if (purchaseToSave.items) {
         for (const item of purchaseToSave.items) {
           const product = get().getProduct(item.productId)
@@ -365,12 +481,10 @@ const useStore = create((set, get) => ({
   },
 
   getPurchasesToday: () => {
-    const state = get()
     const today = api.getTodayDateStr()
-    return state.purchases.filter(p => p.date.startsWith(today))
+    return get().purchases.filter(p => p.date.startsWith(today))
   },
 
-  // Expenses
   addExpense: async (expense) => {
     try {
       const newExpense = normalizeExpense(await api.addExpense({
@@ -390,9 +504,7 @@ const useStore = create((set, get) => ({
   updateExpense: async (id, expense) => {
     try {
       const updated = normalizeExpense(await api.updateExpense(id, normalizeExpense(expense)))
-      set(state => ({
-        expenses: state.expenses.map(e => (e.id === id ? updated : e)),
-      }))
+      set(state => ({ expenses: state.expenses.map(e => (e.id === id ? updated : e)) }))
       return updated
     } catch (err) {
       set({ error: err.message })
@@ -411,12 +523,10 @@ const useStore = create((set, get) => ({
   },
 
   getExpensesToday: () => {
-    const state = get()
     const today = api.getTodayDateStr()
-    return state.expenses.filter(e => e.date.startsWith(today))
+    return get().expenses.filter(e => e.date.startsWith(today))
   },
 
-  // Settings
   updateSettings: async (settings) => {
     try {
       const updated = await api.saveSettings(settings).catch(() => settings)
@@ -428,35 +538,139 @@ const useStore = create((set, get) => ({
     }
   },
 
-  // Utility
   getTotalReceivables: () => {
-    const state = get()
-    return state.customers.reduce((sum, c) => sum + Math.max(0, toNumber(c.balance)), 0)
+    return get().customers.reduce((sum, c) => sum + Math.max(0, toNumber(c.balance)), 0)
   },
 
   getTotalTodaysSales: () => {
-    return get()
-      .getSalesToday()
-      .reduce((sum, s) => sum + toNumber(s.total), 0)
+    return get().getSalesToday().reduce((sum, s) => sum + toNumber(s.total), 0)
   },
 
   getTotalTodaysPurchases: () => {
-    return get()
-      .getPurchasesToday()
-      .reduce((sum, p) => sum + toNumber(p.total), 0)
+    return get().getPurchasesToday().reduce((sum, p) => sum + toNumber(p.total), 0)
   },
 
   getTotalTodaysExpenses: () => {
-    return get()
-      .getExpensesToday()
-      .reduce((sum, e) => sum + toNumber(e.amount), 0)
+    return get().getExpensesToday().reduce((sum, e) => sum + toNumber(e.amount), 0)
   },
 
   getLowStockProducts: (threshold = 10) => {
-    const state = get()
-    return state.products.filter(p => toNumber(p.stock) <= threshold)
+    return get().products.filter(p => toNumber(p.stock) <= threshold)
+  },
+
+  // Admin-related methods
+  adminLogin: async ({ email, password, remember }) => {
+    set({ authLoading: true, authError: null })
+    try {
+      const passwordHash = await api.hashPassword(password)
+      const user = await api.adminLogin({ email, passwordHash })
+      if (user.role !== 'ADMIN') {
+        throw new Error('Admin access required.')
+      }
+      get().saveSession(user, remember)
+      return user
+    } catch (err) {
+      set({ authError: err.message })
+      throw err
+    } finally {
+      set({ authLoading: false })
+    }
+  },
+
+  adminLogout: () => {
+    get().clearSession()
+  },
+
+  fetchAllUsers: async (page = 1, limit = 10) => {
+    set({ loading: true, error: null })
+    try {
+      const users = await api.fetchAllUsers(page, limit)
+      return users
+    } catch (err) {
+      set({ error: err.message })
+      throw err
+    } finally {
+      set({ loading: false })
+    }
+  },
+
+  searchUsersAdmin: async (searchTerm) => {
+    set({ loading: true, error: null })
+    try {
+      const users = await api.searchUsers(searchTerm)
+      return users
+    } catch (err) {
+      set({ error: err.message })
+      throw err
+    } finally {
+      set({ loading: false })
+    }
+  },
+
+  getUserDetailsAdmin: async (userId) => {
+    set({ loading: true, error: null })
+    try {
+      const user = await api.getUserDetails(userId)
+      return user
+    } catch (err) {
+      set({ error: err.message })
+      throw err
+    } finally {
+      set({ loading: false })
+    }
+  },
+
+  updateUserStatusAdmin: async (userId, status) => {
+    set({ loading: true, error: null })
+    try {
+      const user = await api.updateUserStatus(userId, status)
+      return user
+    } catch (err) {
+      set({ error: err.message })
+      throw err
+    } finally {
+      set({ loading: false })
+    }
+  },
+
+  resetUserPasswordAdmin: async (userId) => {
+    set({ loading: true, error: null })
+    try {
+      await api.resetUserPassword(userId)
+      return true
+    } catch (err) {
+      set({ error: err.message })
+      throw err
+    } finally {
+      set({ loading: false })
+    }
+  },
+
+  deleteUserAdmin: async (userId) => {
+    set({ loading: true, error: null })
+    try {
+      await api.deleteUser(userId)
+      return true
+    } catch (err) {
+      set({ error: err.message })
+      throw err
+    } finally {
+      set({ loading: false })
+    }
+  },
+
+  getDashboardStatsAdmin: async () => {
+    set({ loading: true, error: null })
+    try {
+      const stats = await api.getDashboardStats()
+      return stats
+    } catch (err) {
+      set({ error: err.message })
+      throw err
+    } finally {
+      set({ loading: false })
+    }
   },
 }))
 
 export default useStore
-

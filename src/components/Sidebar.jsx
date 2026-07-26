@@ -4,12 +4,13 @@ import { Home, Users, Box, FileText, ShoppingCart, BarChart2, Settings as Settin
 import Logo from './Logo'
 
 const sections = [
-  { title: 'Dashboard', icon: Home, to: '/' },
+  { title: 'Dashboard', icon: Home, to: '/dashboard' },
   { title: 'Products', icon: Box, to: '/items' },
   { title: 'Parties', icon: Users, to: '/parties' },
   { title: 'New Sale', icon: FileText, to: '/sale/new' },
   { title: 'New Purchase', icon: ShoppingCart, to: '/purchase/new' },
   { title: 'Reports', icon: BarChart2, to: '/reports' },
+  { title: 'Profile', icon: Users, to: '/profile' },
   { title: 'Settings', icon: SettingsIcon, to: '/settings' },
 ]
 

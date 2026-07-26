@@ -22,15 +22,6 @@ const emptyPartyForm = {
   phone: '',
 }
 
-const emptySupplierForm = {
-  name: '',
-  contactPerson: '',
-  phone: '',
-  email: '',
-  address: '',
-  gst: '',
-}
-
 export default function PurchaseNew() {
   const [taxInclusive, setTaxInclusive] = useState(false)
   const [roundOff, setRoundOff] = useState(true)
@@ -47,16 +38,9 @@ export default function PurchaseNew() {
   const [productSaving, setProductSaving] = useState(false)
   const [partyForm, setPartyForm] = useState(emptyPartyForm)
   const [showNewPartyForm, setShowNewPartyForm] = useState(false)
-  const [showSupplierModal, setShowSupplierModal] = useState(false)
-  const [supplierForm, setSupplierForm] = useState(emptySupplierForm)
-  const [supplierErrors, setSupplierErrors] = useState({})
-  const [savingSupplier, setSavingSupplier] = useState(false)
   const store = useStore()
-  const supplierOptions = store.customers.filter(c => (c.type || 'selling') === 'purchased')
 
   const purchaseNo = `PUR-${Date.now() % 100000}`
-
-  const isValidEmail = value => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
   const finalTotal = roundOff ? Math.round(subtotalC / 100) * 100 : subtotalC
 
   async function onSave() {
@@ -207,61 +191,6 @@ export default function PurchaseNew() {
     }
   }
 
-  const resetSupplierForm = () => {
-    setSupplierForm(emptySupplierForm)
-    setSupplierErrors({})
-    setSavingSupplier(false)
-  }
-
-  const validateSupplierForm = () => {
-    const errors = {}
-    if (!supplierForm.name.trim()) errors.name = 'Business name is required'
-    if (!supplierForm.contactPerson.trim()) errors.contactPerson = 'Contact person is required'
-    if (!supplierForm.phone.trim() || !isValidPhoneNumber(supplierForm.phone)) {
-      errors.phone = 'Phone number must be exactly 10 digits'
-    }
-    if (!supplierForm.email.trim() || !isValidEmail(supplierForm.email)) {
-      errors.email = 'Valid email address is required'
-    }
-    if (!supplierForm.address.trim()) errors.address = 'Address is required'
-    if (!supplierForm.gst.trim()) errors.gst = 'GST number is required'
-    setSupplierErrors(errors)
-    return Object.keys(errors).length === 0
-  }
-
-  const saveSupplierAndSelect = async e => {
-    e.preventDefault()
-    if (!validateSupplierForm()) return
-
-    setSavingSupplier(true)
-    try {
-      const newSupplier = await store.addCustomer({
-        name: supplierForm.name.trim(),
-        contactPerson: supplierForm.contactPerson.trim(),
-        phone: sanitizePhoneInput(supplierForm.phone),
-        email: supplierForm.email.trim(),
-        address: supplierForm.address.trim(),
-        gst: supplierForm.gst.trim(),
-        balance: 0,
-        type: 'purchased',
-      })
-      setSelectedSupplier(newSupplier.id)
-      setMessage({ type: 'success', text: 'Supplier created and selected.' })
-      setShowSupplierModal(false)
-      resetSupplierForm()
-    } catch (err) {
-      setSupplierErrors({ submit: err.message || 'Could not save supplier' })
-      setMessage({ type: 'error', text: err.message || 'Could not save supplier' })
-    } finally {
-      setSavingSupplier(false)
-    }
-  }
-
-  const closeSupplierModal = () => {
-    setShowSupplierModal(false)
-    resetSupplierForm()
-  }
-
   return (
     <div className="space-y-4 max-w-6xl">
       <div className="bg-white border rounded-lg p-4 shadow-sm">
@@ -284,23 +213,14 @@ export default function PurchaseNew() {
           </div>
 
           <div>
-            <div className="flex items-center justify-between gap-3">
-              <label className="text-xs font-semibold text-gray-600">Supplier</label>
-              <button
-                type="button"
-                onClick={() => setShowSupplierModal(true)}
-                className="text-xs text-sky-600 hover:text-sky-800"
-              >
-                + New Supplier
-              </button>
-            </div>
+            <label className="text-xs font-semibold text-gray-600">Supplier</label>
             <select
               className="w-full mt-1 px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
               value={selectedSupplier}
               onChange={e => setSelectedSupplier(e.target.value)}
             >
               <option value="">Select Supplier</option>
-              {supplierOptions.map(c => (
+              {store.customers.map(c => (
                 <option key={c.id} value={c.id}>
                   {c.name} (Bal: Rs. {toNumber(c.balance).toFixed(2)})
                 </option>
@@ -336,125 +256,6 @@ export default function PurchaseNew() {
           <p className={`text-sm ${message.type === 'error' ? 'text-red-800' : 'text-green-800'}`}>
             {message.text}
           </p>
-        </div>
-      )}
-
-      {showSupplierModal && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 px-4 py-6">
-          <div className="w-full max-w-2xl bg-white rounded-xl shadow-xl overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b bg-slate-50">
-              <div>
-                <h3 className="text-lg font-semibold text-slate-900">New Supplier</h3>
-                <p className="text-sm text-slate-500">Add supplier details without leaving the purchase form.</p>
-              </div>
-              <button
-                type="button"
-                onClick={closeSupplierModal}
-                className="text-slate-500 hover:text-slate-900"
-              >
-                Close
-              </button>
-            </div>
-            <form onSubmit={saveSupplierAndSelect} className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-slate-700 mb-1">Business Name *</label>
-                <input
-                  type="text"
-                  value={supplierForm.name}
-                  onChange={e => setSupplierForm({ ...supplierForm, name: e.target.value })}
-                  className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-sky-500 ${
-                    supplierErrors.name ? 'border-red-300' : ''
-                  }`}
-                  autoFocus
-                />
-                {supplierErrors.name && <p className="text-xs text-red-600 mt-1">{supplierErrors.name}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Contact Person *</label>
-                <input
-                  type="text"
-                  value={supplierForm.contactPerson}
-                  onChange={e => setSupplierForm({ ...supplierForm, contactPerson: e.target.value })}
-                  className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-sky-500 ${
-                    supplierErrors.contactPerson ? 'border-red-300' : ''
-                  }`}
-                />
-                {supplierErrors.contactPerson && <p className="text-xs text-red-600 mt-1">{supplierErrors.contactPerson}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Phone *</label>
-                <input
-                  type="tel"
-                  inputMode="numeric"
-                  maxLength={10}
-                  value={supplierForm.phone}
-                  onChange={e => setSupplierForm({ ...supplierForm, phone: sanitizePhoneInput(e.target.value) })}
-                  className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-sky-500 ${
-                    supplierErrors.phone ? 'border-red-300' : ''
-                  }`}
-                />
-                {supplierErrors.phone && <p className="text-xs text-red-600 mt-1">{supplierErrors.phone}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Email *</label>
-                <input
-                  type="email"
-                  value={supplierForm.email}
-                  onChange={e => setSupplierForm({ ...supplierForm, email: e.target.value })}
-                  className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-sky-500 ${
-                    supplierErrors.email ? 'border-red-300' : ''
-                  }`}
-                />
-                {supplierErrors.email && <p className="text-xs text-red-600 mt-1">{supplierErrors.email}</p>}
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-slate-700 mb-1">Address *</label>
-                <textarea
-                  value={supplierForm.address}
-                  onChange={e => setSupplierForm({ ...supplierForm, address: e.target.value })}
-                  className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-sky-500 ${
-                    supplierErrors.address ? 'border-red-300' : ''
-                  }`}
-                  rows={4}
-                />
-                {supplierErrors.address && <p className="text-xs text-red-600 mt-1">{supplierErrors.address}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">GST Number *</label>
-                <input
-                  type="text"
-                  value={supplierForm.gst}
-                  onChange={e => setSupplierForm({ ...supplierForm, gst: e.target.value })}
-                  className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-sky-500 ${
-                    supplierErrors.gst ? 'border-red-300' : ''
-                  }`}
-                />
-                {supplierErrors.gst && <p className="text-xs text-red-600 mt-1">{supplierErrors.gst}</p>}
-              </div>
-              {supplierErrors.submit && (
-                <div className="md:col-span-2 bg-red-50 border border-red-200 text-red-800 rounded p-3 text-sm">
-                  {supplierErrors.submit}
-                </div>
-              )}
-              <div className="md:col-span-2 flex justify-end gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={closeSupplierModal}
-                  disabled={savingSupplier}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 disabled:opacity-60"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={savingSupplier}
-                  className="px-4 py-2 bg-sky-600 text-white rounded hover:bg-sky-700 disabled:bg-gray-400"
-                >
-                  {savingSupplier ? 'Saving...' : 'Save Supplier'}
-                </button>
-              </div>
-            </form>
-          </div>
         </div>
       )}
 

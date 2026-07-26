@@ -3,7 +3,20 @@
     {
       "id": "b1",
       "name": "Acme Traders",
-      "gstin": "29ABCDE1234F2Z5"
+      "gstin": "29ABCDE1234F2Z5",
+      "userId": "u1"
+    },
+    {
+      "id": "b1785061683486",
+      "userId": "u1785061683484",
+      "name": "Test Business Delete",
+      "gstin": ""
+    },
+    {
+      "id": "b1785062231460",
+      "userId": "u1785062231458",
+      "name": "BTRAP",
+      "gstin": ""
     }
   ],
   "products": [
@@ -17,7 +30,8 @@
       "price": 3500,
       "category": "",
       "description": "",
-      "id": "p1782567534669"
+      "id": "p1782567534669",
+      "userId": "u1"
     },
     {
       "stock": 18,
@@ -29,7 +43,8 @@
       "price": 5500,
       "category": "",
       "description": "",
-      "id": "p1782567616792"
+      "id": "p1782567616792",
+      "userId": "u1"
     },
     {
       "stock": 87,
@@ -41,7 +56,8 @@
       "price": 150,
       "category": "",
       "description": "",
-      "id": "p1785055276298"
+      "id": "p1785055276298",
+      "userId": "u1"
     }
   ],
   "customers": [
@@ -49,33 +65,38 @@
       "name": "Khushi E-Rickshaw",
       "phone": "8956485897",
       "balance": 0,
-      "id": "c1782567489167"
+      "id": "c1782567489167",
+      "userId": "u1"
     },
     {
       "name": "GY",
       "phone": "584588554454",
       "balance": 0,
-      "id": "c1785052705441"
+      "id": "c1785052705441",
+      "userId": "u1"
     },
     {
       "name": "7 Horn",
       "phone": "89759856",
       "balance": 0,
-      "id": "c1785055276261"
+      "id": "c1785055276261",
+      "userId": "u1"
     },
     {
       "name": "Khushi",
       "phone": "56854565485",
       "balance": 0,
       "type": "purchased",
-      "id": "c1785055588304"
+      "id": "c1785055588304",
+      "userId": "u1"
     },
     {
       "name": "daly bms",
       "phone": "8695847859",
       "balance": 0,
       "type": "purchased",
-      "id": "c1785056403787"
+      "id": "c1785056403787",
+      "userId": "u1"
     },
     {
       "name": "barun electricc",
@@ -86,7 +107,8 @@
       "gst": "25655",
       "balance": 0,
       "type": "purchased",
-      "id": "c1785059346964"
+      "id": "c1785059346964",
+      "userId": "u1"
     }
   ],
   "sales": [
@@ -113,7 +135,8 @@
       "total": 3700,
       "paymentMode": "cash",
       "taxMode": "inclusive",
-      "id": 1782806623137
+      "id": 1782806623137,
+      "userId": "u1"
     },
     {
       "date": "2026-07-26T00:00:00.000Z",
@@ -138,7 +161,8 @@
       "total": 5500,
       "paymentMode": "cash",
       "taxMode": "exclusive",
-      "id": 1785055025849
+      "id": 1785055025849,
+      "userId": "u1"
     },
     {
       "date": "2026-07-26T00:00:00.000Z",
@@ -163,7 +187,8 @@
       "total": 5600,
       "paymentMode": "cash",
       "taxMode": "inclusive",
-      "id": 1785057040946
+      "id": 1785057040946,
+      "userId": "u1"
     },
     {
       "date": "2026-07-26T00:00:00.000Z",
@@ -188,7 +213,8 @@
       "total": 1500,
       "paymentMode": "cash",
       "taxMode": "exclusive",
-      "id": 1785057174761
+      "id": 1785057174761,
+      "userId": "u1"
     },
     {
       "date": "2026-07-26T00:00:00.000Z",
@@ -213,7 +239,8 @@
       "total": 150,
       "paymentMode": "cash",
       "taxMode": "exclusive",
-      "id": 1785057195349
+      "id": 1785057195349,
+      "userId": "u1"
     },
     {
       "date": "2026-07-26T00:00:00.000Z",
@@ -238,7 +265,8 @@
       "total": 150,
       "paymentMode": "cash",
       "taxMode": "exclusive",
-      "id": 1785057243188
+      "id": 1785057243188,
+      "userId": "u1"
     },
     {
       "date": "2026-07-26T00:00:00.000Z",
@@ -263,7 +291,8 @@
       "total": 150,
       "paymentMode": "cash",
       "taxMode": "exclusive",
-      "id": 1785057567329
+      "id": 1785057567329,
+      "userId": "u1"
     }
   ],
   "purchases": [
@@ -284,7 +313,8 @@
       "total": 25000,
       "paymentMode": "cash",
       "taxMode": "inclusive",
-      "id": 1782567558930
+      "id": 1782567558930,
+      "userId": "u1"
     },
     {
       "date": "2026-06-27T13:40:20.617Z",
@@ -303,7 +333,8 @@
       "total": 90000,
       "paymentMode": "cash",
       "taxMode": "exclusive",
-      "id": 1782567620617
+      "id": 1782567620617,
+      "userId": "u1"
     },
     {
       "date": "2026-07-26T08:41:27.232Z",
@@ -322,7 +353,8 @@
       "total": 10000,
       "paymentMode": "cash",
       "taxMode": "exclusive",
-      "id": 1785055287232
+      "id": 1785055287232,
+      "userId": "u1"
     },
     {
       "date": "2026-07-26T09:49:27.653Z",
@@ -341,16 +373,116 @@
       "total": 25000,
       "paymentMode": "cash",
       "taxMode": "inclusive",
-      "id": 1785059367653
+      "id": 1785059367653,
+      "userId": "u1"
     }
   ],
   "expenses": [],
-  "settings": {
-    "id": "default",
-    "requireGSTIN": false,
-    "stopOnNegativeStock": true,
-    "passcodeLock": false,
-    "auditTrail": true,
-    "printTheme": "GST Theme 1"
-  }
+  "settings": [
+    {
+      "id": "s1",
+      "requireGSTIN": false,
+      "stopOnNegativeStock": true,
+      "passcodeLock": false,
+      "auditTrail": true,
+      "printTheme": "GST Theme 1",
+      "userId": "u1"
+    },
+    {
+      "id": "s1785061683486",
+      "userId": "u1785061683484",
+      "requireGSTIN": false,
+      "stopOnNegativeStock": true,
+      "passcodeLock": false,
+      "auditTrail": true,
+      "printTheme": "GST Theme 1"
+    },
+    {
+      "id": "s1785062231461",
+      "userId": "u1785062231458",
+      "requireGSTIN": false,
+      "stopOnNegativeStock": true,
+      "passcodeLock": false,
+      "auditTrail": true,
+      "printTheme": "GST Theme 1"
+    }
+  ],
+  "users": [
+    {
+      "id": "u_admin_001",
+      "fullName": "System Administrator",
+      "businessName": "Admin Portal",
+      "email": "admin@inventoryapp.com",
+      "phone": "1234567890",
+      "passwordHash": "e86f78a8a3caf0b60d8e74e5942aa6d86dc150cd3c03338aef25b7d2d7e3acc7",
+      "gstNumber": "",
+      "businessAddress": "Admin Office",
+      "businessType": "Admin",
+      "logoUrl": "",
+      "invoicePrefix": "INV",
+      "currency": "INR",
+      "taxSettings": "GST",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "role": "ADMIN",
+      "status": "active",
+      "lastLogin": "2026-07-26T16:08:53.706+05:30"
+    },
+    {
+      "id": "u1",
+      "fullName": "Admin User",
+      "businessName": "Acme Traders",
+      "email": "admin@example.com",
+      "phone": "8695847826",
+      "passwordHash": "e86f78a8a3caf0b60d8e74e5942aa6d86dc150cd3c03338aef25b7d2d7e3acc7",
+      "gstNumber": "29ABCDE1234F2Z5",
+      "businessAddress": "VILL- JAVA, P.O- MAHATPUR, P.S- KOTWALI, DIST- NADIA, PIN- 741164",
+      "businessType": "Retail",
+      "logoUrl": "",
+      "invoicePrefix": "INV",
+      "currency": "INR",
+      "taxSettings": "GST",
+      "createdAt": "2026-07-26T00:00:00.000Z",
+      "role": "USER",
+      "status": "active",
+      "lastLogin": "2026-07-26T16:08:53.706+05:30"
+    },
+    {
+      "id": "u1785061683484",
+      "fullName": "Test User Delete",
+      "businessName": "Test Business Delete",
+      "email": "testdelete@example.com",
+      "phone": "9876543210",
+      "passwordHash": "7e6e0c3079a08c5cc6036789b57e951f65f82383913ba1a49ae992544f1b4b6e",
+      "gstNumber": "",
+      "businessAddress": "Test Address",
+      "businessType": "Retail",
+      "logoUrl": "",
+      "invoicePrefix": "INV",
+      "currency": "INR",
+      "taxSettings": "GST",
+      "createdAt": "2026-07-26T10:28:03.485Z",
+      "role": "USER",
+      "status": "active",
+      "lastLogin": "2026-07-26T10:28:03.485Z"
+    },
+    {
+      "id": "u1785062231458",
+      "fullName": "Shuvojit Biswas",
+      "businessName": "BTRAP",
+      "email": "biswasshuvojit18@gmail.com",
+      "phone": "7865862924",
+      "passwordHash": "e05f11320baafc99c7041de1ea485a8db94cb41d9ef997ea4dc9628f4ad41499",
+      "gstNumber": "",
+      "businessAddress": "VILL- JAVA, P.O- MAHATPUR, P.S- KOTWALI, DIST- NADIA, PIN- 741164",
+      "businessType": "",
+      "logoUrl": "",
+      "invoicePrefix": "INV",
+      "currency": "INR",
+      "taxSettings": "GST",
+      "createdAt": "2026-07-26T10:37:11.458Z",
+      "role": "USER",
+      "status": "active",
+      "lastLogin": "2026-07-26T10:37:11.458Z"
+    }
+  ]
 }

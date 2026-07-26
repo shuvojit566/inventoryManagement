@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Plus, Search, Clock, X, Package, Users, FileText, ShoppingCart, Receipt } from 'lucide-react'
+import { Plus, Search, Clock, X, Package, Users, FileText, ShoppingCart, Receipt, LogOut } from 'lucide-react'
 import useStore from '../store/useStore'
 import { toNumber } from '../utils/math'
 
@@ -11,6 +11,7 @@ const includesQuery = (values, query) =>
 
 export default function Topbar() {
   const store = useStore()
+  const currentUser = store.currentUser
   const location = useLocation()
   const now = new Date()
   const [query, setQuery] = useState('')
@@ -238,11 +239,19 @@ export default function Topbar() {
           <span>{now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
         </div>
         <div className="text-xs">
-          <span className="text-gray-500">Active:</span>
-          <span className="font-semibold text-gray-900 ml-1">Acme Traders</span>
+          <span className="text-gray-500">Account:</span>
+          <span className="font-semibold text-gray-900 ml-1">{currentUser?.businessName || 'My Account'}</span>
         </div>
         <div className="w-2 h-2 rounded-full bg-green-500"></div>
         <span className="text-xs text-green-600 font-medium">Connected</span>
+        <button
+          type="button"
+          onClick={() => store.logout()}
+          className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-700 hover:bg-slate-50"
+        >
+          <LogOut className="w-4 h-4" />
+          Logout
+        </button>
       </div>
     </header>
   )
