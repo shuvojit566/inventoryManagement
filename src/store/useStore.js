@@ -1,6 +1,7 @@
 import create from 'zustand'
 import * as api from '../utils/api'
 import { toNumber } from '../utils/math'
+import { sanitizePhoneInput } from '../utils/phone'
 
 const normalizeProduct = product => ({
   ...product,
@@ -13,8 +14,33 @@ const normalizeProduct = product => ({
 
 const normalizeCustomer = customer => ({
   ...customer,
+  phone: customer.phone || '',
+  email: customer.email || '',
+  address: customer.address || '',
+  gst: customer.gst || '',
+  type: customer.type || 'selling',
   balance: toNumber(customer.balance),
 })
+
+const getDuplicateCustomerError = (customers, customer, excludeId = null) => {
+  const phone = sanitizePhoneInput(customer.phone || '')
+  if (phone) {
+    const duplicate = customers.find(
+      c => sanitizePhoneInput(c.phone || '') === phone && c.id !== excludeId,
+    )
+    if (duplicate) return 'A customer with this phone number already exists.'
+  }
+
+  const gst = (customer.gst || '').trim().toLowerCase()
+  if (gst) {
+    const duplicate = customers.find(
+      c => (c.gst || '').trim().toLowerCase() === gst && c.id !== excludeId,
+    )
+    if (duplicate) return 'A customer with this GST number already exists.'
+  }
+
+  return null
+}
 
 const normalizeSaleItem = item => ({
   ...item,
@@ -185,6 +211,12 @@ const useStore = create((set, get) => ({
   // Customers
   addCustomer: async (customer) => {
     try {
+      const state = get()
+      const duplicateError = getDuplicateCustomerError(state.customers, customer)
+      if (duplicateError) {
+        throw new Error(duplicateError)
+      }
+
       const newCustomer = normalizeCustomer(await api.addCustomer({
         ...customer,
         id: `c${Date.now()}`,
@@ -200,6 +232,12 @@ const useStore = create((set, get) => ({
 
   updateCustomer: async (id, customer) => {
     try {
+      const state = get()
+      const duplicateError = getDuplicateCustomerError(state.customers, customer, id)
+      if (duplicateError) {
+        throw new Error(duplicateError)
+      }
+
       const updated = normalizeCustomer(await api.updateCustomer(id, normalizeCustomer(customer)))
       set(state => ({
         customers: state.customers.map(c => (c.id === id ? updated : c)),

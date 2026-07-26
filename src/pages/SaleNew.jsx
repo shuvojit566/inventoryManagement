@@ -26,7 +26,18 @@ export default function SaleNew() {
   const [errors, setErrors] = useState({})
   const [lastSavedSale, setLastSavedSale] = useState(null)
   const [shareModalOpen, setShareModalOpen] = useState(false)
+  const [showCustomerModal, setShowCustomerModal] = useState(false)
+  const [customerForm, setCustomerForm] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    address: '',
+    gst: '',
+  })
+  const [customerErrors, setCustomerErrors] = useState({})
+  const [savingCustomer, setSavingCustomer] = useState(false)
   const store = useStore()
+  const saleCustomers = store.customers.filter(c => (c.type || 'selling') === 'selling')
 
   const selectedCustomerRecord = store.getCustomer(selectedCustomer)
   const invoiceNo = `INV-${Date.now() % 100000}`
@@ -39,6 +50,63 @@ export default function SaleNew() {
   useEffect(() => {
     setPhone(sanitizePhoneInput(selectedCustomerRecord?.phone || ''))
   }, [selectedCustomerRecord?.id])
+
+  const isValidEmail = value => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+
+  const resetCustomerForm = () => {
+    setCustomerForm({
+      name: '',
+      phone: '',
+      email: '',
+      address: '',
+      gst: '',
+    })
+    setCustomerErrors({})
+  }
+
+  const validateCustomerForm = () => {
+    const errors = {}
+    if (!customerForm.name.trim()) errors.name = 'Customer name is required'
+    if (!customerForm.phone.trim() || !isValidPhoneNumber(customerForm.phone)) {
+      errors.phone = 'Phone number must be exactly 10 digits'
+    }
+    if (!customerForm.email.trim() || !isValidEmail(customerForm.email)) {
+      errors.email = 'Valid email address is required'
+    }
+    if (!customerForm.address.trim()) errors.address = 'Address is required'
+    if (!customerForm.gst.trim()) errors.gst = 'GST number is required'
+    setCustomerErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  const closeCustomerModal = () => {
+    setShowCustomerModal(false)
+    resetCustomerForm()
+  }
+
+  const saveCustomerAndSelect = async e => {
+    e.preventDefault()
+    if (!validateCustomerForm()) return
+
+    setSavingCustomer(true)
+    try {
+      const newCustomer = await store.addCustomer({
+        ...customerForm,
+        phone: sanitizePhoneInput(customerForm.phone),
+        balance: 0,
+        type: 'selling',
+      })
+      setSelectedCustomer(newCustomer.id)
+      setPhone(newCustomer.phone)
+      setMessage({ type: 'success', text: 'Customer created and selected.' })
+      closeCustomerModal()
+    } catch (err) {
+      setCustomerErrors({ submit: err.message || 'Could not save customer' })
+      setMessage({ type: 'error', text: err.message || 'Could not save customer' })
+    } finally {
+      setSavingCustomer(false)
+    }
+  }
 
   const handlePrintLastSale = () => {
     if (lastSavedSale) {
@@ -184,14 +252,23 @@ export default function SaleNew() {
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-6 p-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 content-start">
             <div>
-              <label className="text-xs font-semibold text-gray-600">Customer *</label>
+              <div className="flex items-center justify-between gap-3">
+                <label className="text-xs font-semibold text-gray-600">Customer *</label>
+                <button
+                  type="button"
+                  onClick={() => setShowCustomerModal(true)}
+                  className="text-xs text-sky-600 hover:text-sky-800"
+                >
+                  + New Customer
+                </button>
+              </div>
               <select
                 className="w-full mt-1 px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
                 value={selectedCustomer}
                 onChange={e => setSelectedCustomer(e.target.value)}
               >
                 <option value="">Select Customer</option>
-                {store.customers.map(c => (
+                {saleCustomers.map(c => (
                   <option key={c.id} value={c.id}>
                     {c.name}
                   </option>
@@ -318,6 +395,112 @@ export default function SaleNew() {
               </button>
             </div>
           )}
+        </div>
+      )}
+
+      {showCustomerModal && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 px-4 py-6">
+          <div className="w-full max-w-2xl bg-white rounded-xl shadow-xl overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b bg-slate-50">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900">New Customer</h3>
+                <p className="text-sm text-slate-500">Add the customer and automatically select them for this sale.</p>
+              </div>
+              <button
+                type="button"
+                onClick={closeCustomerModal}
+                className="text-slate-500 hover:text-slate-900"
+              >
+                Close
+              </button>
+            </div>
+            <form onSubmit={saveCustomerAndSelect} className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-slate-700 mb-1">Name *</label>
+                <input
+                  type="text"
+                  value={customerForm.name}
+                  onChange={e => setCustomerForm({ ...customerForm, name: e.target.value })}
+                  className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-sky-500 ${
+                    customerErrors.name ? 'border-red-300' : ''
+                  }`}
+                  autoFocus
+                />
+                {customerErrors.name && <p className="text-xs text-red-600 mt-1">{customerErrors.name}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Phone *</label>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={10}
+                  value={customerForm.phone}
+                  onChange={e => setCustomerForm({ ...customerForm, phone: sanitizePhoneInput(e.target.value) })}
+                  className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-sky-500 ${
+                    customerErrors.phone ? 'border-red-300' : ''
+                  }`}
+                />
+                {customerErrors.phone && <p className="text-xs text-red-600 mt-1">{customerErrors.phone}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Email *</label>
+                <input
+                  type="email"
+                  value={customerForm.email}
+                  onChange={e => setCustomerForm({ ...customerForm, email: e.target.value })}
+                  className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-sky-500 ${
+                    customerErrors.email ? 'border-red-300' : ''
+                  }`}
+                />
+                {customerErrors.email && <p className="text-xs text-red-600 mt-1">{customerErrors.email}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">GST Number *</label>
+                <input
+                  type="text"
+                  value={customerForm.gst}
+                  onChange={e => setCustomerForm({ ...customerForm, gst: e.target.value })}
+                  className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-sky-500 ${
+                    customerErrors.gst ? 'border-red-300' : ''
+                  }`}
+                />
+                {customerErrors.gst && <p className="text-xs text-red-600 mt-1">{customerErrors.gst}</p>}
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-slate-700 mb-1">Address *</label>
+                <textarea
+                  value={customerForm.address}
+                  onChange={e => setCustomerForm({ ...customerForm, address: e.target.value })}
+                  className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-sky-500 ${
+                    customerErrors.address ? 'border-red-300' : ''
+                  }`}
+                  rows={4}
+                />
+                {customerErrors.address && <p className="text-xs text-red-600 mt-1">{customerErrors.address}</p>}
+              </div>
+              {customerErrors.submit && (
+                <div className="md:col-span-2 bg-red-50 border border-red-200 text-red-800 rounded p-3 text-sm">
+                  {customerErrors.submit}
+                </div>
+              )}
+              <div className="md:col-span-2 flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={closeCustomerModal}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingCustomer}
+                  className="px-4 py-2 bg-sky-600 text-white rounded hover:bg-sky-700 disabled:bg-gray-400"
+                >
+                  {savingCustomer ? 'Saving...' : 'Save Customer'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 

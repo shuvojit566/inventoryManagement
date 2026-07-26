@@ -8,7 +8,7 @@
   ],
   "products": [
     {
-      "stock": 90,
+      "stock": 100,
       "unit": "pcs",
       "gst": 0,
       "name": "Controller 999",
@@ -76,6 +76,17 @@
       "balance": 0,
       "type": "purchased",
       "id": "c1785056403787"
+    },
+    {
+      "name": "barun electricc",
+      "contactPerson": "Shuvojit Biswas",
+      "phone": "8695847826",
+      "email": "biswasshuvojit18@gmail.com",
+      "address": "VILL- JAVA, P.O- MAHATPUR, P.S- KOTWALI, DIST- NADIA, PIN- 741164",
+      "gst": "25655",
+      "balance": 0,
+      "type": "purchased",
+      "id": "c1785059346964"
     }
   ],
   "sales": [
@@ -312,6 +323,25 @@
       "paymentMode": "cash",
       "taxMode": "exclusive",
       "id": 1785055287232
+    },
+    {
+      "date": "2026-07-26T09:49:27.653Z",
+      "supplierId": "c1785059346964",
+      "items": [
+        {
+          "productId": "p1782567534669",
+          "qty": 10,
+          "price": 2500,
+          "unit": "pcs",
+          "discount": 0,
+          "tax": 0,
+          "amount": 25000
+        }
+      ],
+      "total": 25000,
+      "paymentMode": "cash",
+      "taxMode": "inclusive",
+      "id": 1785059367653
     }
   ],
   "expenses": [],
