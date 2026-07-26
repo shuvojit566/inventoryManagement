@@ -6,6 +6,20 @@ const server = jsonServer.create()
 const router = jsonServer.router(path.join(__dirname, 'db.json'))
 const middlewares = jsonServer.defaults({})
 
+// Configure CORS to allow requests from any origin (for development and mobile access)
+server.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*')
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  res.header('Access-Control-Max-Age', '86400')
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200)
+  }
+  next()
+})
+
 server.use(middlewares)
 server.use(jsonServer.bodyParser)
 
@@ -430,6 +444,13 @@ server.use((req, res, next) => {
 server.use(router)
 
 const port = process.env.PORT || 4000
-server.listen(port, () => {
-  console.log(`JSON Server is running on http://localhost:${port}`)
+const host = process.env.HOST || '0.0.0.0'
+
+server.listen(port, host, () => {
+  const address = host === '0.0.0.0' ? 'localhost' : host
+  console.log(`JSON Server is running on http://${address}:${port}`)
+  if (host === '0.0.0.0') {
+    console.log(`[Mobile Access] Use your machine IP address instead of localhost`)
+    console.log(`[Example] http://<YOUR_IP>:${port}`)
+  }
 })

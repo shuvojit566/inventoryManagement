@@ -1,4 +1,39 @@
-﻿const API_BASE = 'http://localhost:4000'
+﻿// Get API base URL from environment or detect current server
+const getAPIBase = () => {
+  // If explicitly set in environment, use it
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL
+  }
+
+  // For production or when accessed from different host
+  if (typeof window !== 'undefined') {
+    const protocol = window.location.protocol // http: or https:
+    const hostname = window.location.hostname // localhost, 127.0.0.1, or IP
+    const port = window.location.port
+    
+    // If running on same server (frontend and backend on same host)
+    // Use /api path or port 4000 if explicitly needed
+    if (port === '5173' || port === '') {
+      // Dev server on port 5173, connect to backend on port 4000
+      return `${protocol}//${hostname}:4000`
+    }
+    
+    // For production on same host
+    if (port === '' || port === '80' || port === '443') {
+      // Frontend served from root, assume backend is at /api or same origin
+      // First try same origin, then fall back to port 4000
+      return `${protocol}//${hostname}`
+    }
+    
+    // Fallback: use current host and port 4000
+    return `${protocol}//${hostname}:4000`
+  }
+
+  // Fallback for SSR or non-browser environments
+  return 'http://localhost:4000'
+}
+
+const API_BASE = getAPIBase()
 
 function getSavedSession() {
   const raw = window.localStorage.getItem('inventory-session') || window.sessionStorage.getItem('inventory-session')
