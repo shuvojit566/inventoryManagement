@@ -57,6 +57,11 @@ export function formatBillForShare(sale, storeData) {
   const subtotal = items.reduce((sum, item) => sum + toNumber(item.amount), 0)
   const totalTax = items.reduce((sum, item) => sum + toNumber(item.tax), 0)
   const mechanicCharge = toNumber(sale.mechanicCharge || 0)
+  const labourCharge = toNumber(sale.labourCharge || 0)
+  const installationCharge = toNumber(sale.installationCharge || 0)
+  const serviceCharge = toNumber(sale.serviceCharge || 0)
+  const otherCharges = toNumber(sale.otherCharges || 0)
+  const totalService = mechanicCharge + labourCharge + installationCharge + serviceCharge + otherCharges
   const total = toNumber(sale.total)
 
   return {
@@ -67,6 +72,11 @@ export function formatBillForShare(sale, storeData) {
     subtotal,
     totalTax,
     mechanicCharge,
+    labourCharge,
+    installationCharge,
+    serviceCharge,
+    otherCharges,
+    totalService,
     total,
   }
 }
@@ -177,6 +187,38 @@ export function generateBillHTML(formattedBill) {
               <span class="value">${formatCurrency(mechanicCharge)}</span>
             </div>
           ` : ''}
+          ${labourCharge > 0 ? `
+            <div class="summary-row">
+              <label>Labour Charge:</label>
+              <span class="value">${formatCurrency(labourCharge)}</span>
+            </div>
+          ` : ''}
+          ${installationCharge > 0 ? `
+            <div class="summary-row">
+              <label>Installation Charge:</label>
+              <span class="value">${formatCurrency(installationCharge)}</span>
+            </div>
+          ` : ''}
+          ${serviceCharge > 0 ? `
+            <div class="summary-row">
+              <label>Service Charge:</label>
+              <span class="value">${formatCurrency(serviceCharge)}</span>
+            </div>
+          ` : ''}
+          ${otherCharges > 0 ? `
+            <div class="summary-row">
+              <label>Other Charges:</label>
+              <span class="value">${formatCurrency(otherCharges)}</span>
+            </div>
+          ` : ''}
+
+          ${ (mechanicCharge + labourCharge + installationCharge + serviceCharge + otherCharges) > 0 ? `
+            <div class="summary-row">
+              <label>Labour / Service Charges:</label>
+              <span class="value">${formatCurrency(mechanicCharge + labourCharge + installationCharge + serviceCharge + otherCharges)}</span>
+            </div>
+          ` : ''}
+
           <div class="summary-row total">
             <label>Total Amount Due:</label>
             <span class="value">${formatCurrency(total)}</span>
@@ -198,10 +240,75 @@ export function generateBillHTML(formattedBill) {
  */
 export function printBill(formattedBill) {
   const html = generateBillHTML(formattedBill)
-  const printWindow = window.open('', '', 'height=800,width=900')
+
+  // Try to open a new window for printing. Browsers may block popups, so handle that.
+  let printWindow = null
+  try {
+    printWindow = window.open('', '', 'height=800,width=900')
+  } catch (err) {
+    printWindow = null
+  }
+
+  if (!printWindow) {
+    // Popup blocked — provide a helpful message and fallback to opening in the same tab
+    // Attempt to open a new tab as a last resort; if that also fails, show alert.
+    try {
+      const newTab = window.open()
+      if (!newTab) {
+        alert('Unable to open print window. Please allow popups for this site and try again.')
+        return
+      }
+      newTab.document.write(html)
+      newTab.document.close()
+      // Give the browser a moment to render before printing
+      setTimeout(() => {
+        try {
+          newTab.focus()
+          newTab.print()
+        } catch (e) {
+          // ignore
+        }
+      }, 500)
+      return
+    } catch (e) {
+      alert('Unable to open print window. Please allow popups for this site and try again.')
+      return
+    }
+  }
+
+  // Write content and ensure the document is ready before printing
+  printWindow.document.open()
   printWindow.document.write(html)
   printWindow.document.close()
-  printWindow.print()
+
+  // Focus and print when the new window has loaded. Use a timeout fallback for browsers
+  // that don't reliably fire load for dynamically-written documents.
+  const doPrint = () => {
+    try {
+      printWindow.focus()
+      printWindow.print()
+      // Optionally close the window after printing
+      // printWindow.close()
+    } catch (err) {
+      // If print fails (e.g., due to browser restrictions), alert the user
+      alert('Print failed. Please try printing from the opened bill window.')
+    }
+  }
+
+  // Some browsers will fire onload, others may not — use both approaches.
+  let didPrint = false
+  printWindow.onload = () => {
+    if (didPrint) return
+    didPrint = true
+    setTimeout(doPrint, 100)
+  }
+
+  // Fallback: ensure print is attempted after a short delay if onload doesn't fire
+  setTimeout(() => {
+    if (didPrint) return
+    didPrint = true
+    doPrint()
+  }, 700)
 }
 
 /**

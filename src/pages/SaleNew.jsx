@@ -18,6 +18,10 @@ export default function SaleNew() {
   const [stateOfSupply, setStateOfSupply] = useState('')
   const [invoiceDate, setInvoiceDate] = useState(() => new Date().toISOString().split('T')[0])
   const [mechanicCharge, setMechanicCharge] = useState(0)
+  const [labourCharge, setLabourCharge] = useState(0)
+  const [installationCharge, setInstallationCharge] = useState(0)
+  const [serviceCharge, setServiceCharge] = useState(0)
+  const [otherCharges, setOtherCharges] = useState(0)
   const [receivedAmount, setReceivedAmount] = useState(0)
   const [items, setItems] = useState([])
   const [resetKey, setResetKey] = useState(0)
@@ -43,7 +47,12 @@ export default function SaleNew() {
   const invoiceNo = `INV-${Date.now() % 100000}`
   const roundedSubtotalC = roundOff ? Math.round(subtotalC / 100) * 100 : subtotalC
   const mechanicChargeC = Math.round(toNumber(mechanicCharge) * 100)
-  const finalTotalC = roundedSubtotalC + mechanicChargeC
+  const labourChargeC = Math.round(toNumber(labourCharge) * 100)
+  const installationChargeC = Math.round(toNumber(installationCharge) * 100)
+  const serviceChargeC = Math.round(toNumber(serviceCharge) * 100)
+  const otherChargesC = Math.round(toNumber(otherCharges) * 100)
+  const totalChargesC = mechanicChargeC + labourChargeC + installationChargeC + serviceChargeC + otherChargesC
+  const finalTotalC = roundedSubtotalC + totalChargesC
   const finalTotal = toNumber(fromCents(finalTotalC))
   const balanceAmount = Math.max(0, finalTotal - toNumber(receivedAmount))
 
@@ -141,6 +150,10 @@ export default function SaleNew() {
     setBillingAddress('')
     setStateOfSupply('')
     setMechanicCharge(0)
+    setLabourCharge(0)
+    setInstallationCharge(0)
+    setServiceCharge(0)
+    setOtherCharges(0)
     setReceivedAmount(0)
     setPaymentMode('cash')
     setResetKey(key => key + 1)
@@ -188,6 +201,10 @@ export default function SaleNew() {
         billingAddress,
         stateOfSupply,
         mechanicCharge: toNumber(mechanicCharge),
+        labourCharge: toNumber(labourCharge),
+        installationCharge: toNumber(installationCharge),
+        serviceCharge: toNumber(serviceCharge),
+        otherCharges: toNumber(otherCharges),
         received: toNumber(receivedAmount),
         balance: balanceAmount,
         items: items
@@ -535,17 +552,71 @@ export default function SaleNew() {
         </div>
 
         <div className="space-y-3">
-          <div className="grid grid-cols-[1fr_150px_70px] items-center gap-3">
-            <label className="text-sm font-semibold text-gray-600">Mechanic Charge</label>
-            <input
-              type="number"
-              value={mechanicCharge}
-              onChange={e => setMechanicCharge(parseFloat(e.target.value) || 0)}
-              className="px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
-              min="0"
-              step="0.01"
-            />
-            <span className="text-right font-semibold">{toNumber(mechanicCharge).toFixed(2)}</span>
+          <div className="grid grid-cols-1 gap-2">
+            <div className="grid grid-cols-[1fr_150px_70px] items-center gap-3">
+              <label className="text-sm font-semibold text-gray-600">Mechanic Charge</label>
+              <input
+                type="number"
+                value={mechanicCharge}
+                onChange={e => setMechanicCharge(parseFloat(e.target.value) || 0)}
+                className="px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                min="0"
+                step="0.01"
+              />
+              <span className="text-right font-semibold">{toNumber(mechanicCharge).toFixed(2)}</span>
+            </div>
+
+            <div className="grid grid-cols-[1fr_150px_70px] items-center gap-3">
+              <label className="text-sm font-semibold text-gray-600">Labour Charge</label>
+              <input
+                type="number"
+                value={labourCharge}
+                onChange={e => setLabourCharge(parseFloat(e.target.value) || 0)}
+                className="px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                min="0"
+                step="0.01"
+              />
+              <span className="text-right font-semibold">{toNumber(labourCharge).toFixed(2)}</span>
+            </div>
+
+            <div className="grid grid-cols-[1fr_150px_70px] items-center gap-3">
+              <label className="text-sm font-semibold text-gray-600">Installation Charge</label>
+              <input
+                type="number"
+                value={installationCharge}
+                onChange={e => setInstallationCharge(parseFloat(e.target.value) || 0)}
+                className="px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                min="0"
+                step="0.01"
+              />
+              <span className="text-right font-semibold">{toNumber(installationCharge).toFixed(2)}</span>
+            </div>
+
+            <div className="grid grid-cols-[1fr_150px_70px] items-center gap-3">
+              <label className="text-sm font-semibold text-gray-600">Service Charge</label>
+              <input
+                type="number"
+                value={serviceCharge}
+                onChange={e => setServiceCharge(parseFloat(e.target.value) || 0)}
+                className="px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                min="0"
+                step="0.01"
+              />
+              <span className="text-right font-semibold">{toNumber(serviceCharge).toFixed(2)}</span>
+            </div>
+
+            <div className="grid grid-cols-[1fr_150px_70px] items-center gap-3">
+              <label className="text-sm font-semibold text-gray-600">Other Charges</label>
+              <input
+                type="number"
+                value={otherCharges}
+                onChange={e => setOtherCharges(parseFloat(e.target.value) || 0)}
+                className="px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                min="0"
+                step="0.01"
+              />
+              <span className="text-right font-semibold">{toNumber(otherCharges).toFixed(2)}</span>
+            </div>
           </div>
 
           <div className="grid grid-cols-[1fr_150px_70px] items-center gap-3">

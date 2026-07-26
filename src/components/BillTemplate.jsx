@@ -14,6 +14,11 @@ export default function BillTemplate({ sale, customer, items, business }) {
   const subtotal = items.reduce((sum, item) => sum + toNumber(item.amount), 0)
   const totalTax = items.reduce((sum, item) => sum + toNumber(item.tax), 0)
   const mechanicCharge = toNumber(sale.mechanicCharge || 0)
+  const labourCharge = toNumber(sale.labourCharge || 0)
+  const installationCharge = toNumber(sale.installationCharge || 0)
+  const serviceCharge = toNumber(sale.serviceCharge || 0)
+  const otherCharges = toNumber(sale.otherCharges || 0)
+  const totalServiceCharges = mechanicCharge + labourCharge + installationCharge + serviceCharge + otherCharges
 
   return (
     <div className="w-full max-w-2xl mx-auto p-8 bg-white print:p-0 print:max-w-none">
@@ -107,6 +112,38 @@ export default function BillTemplate({ sale, customer, items, business }) {
             <span className="text-right">{formatCurrency(mechanicCharge)}</span>
           </div>
         )}
+        {labourCharge > 0 && (
+          <div className="grid grid-cols-2 gap-4 text-sm mb-2">
+            <span className="font-semibold">Labour Charge:</span>
+            <span className="text-right">{formatCurrency(labourCharge)}</span>
+          </div>
+        )}
+        {installationCharge > 0 && (
+          <div className="grid grid-cols-2 gap-4 text-sm mb-2">
+            <span className="font-semibold">Installation Charge:</span>
+            <span className="text-right">{formatCurrency(installationCharge)}</span>
+          </div>
+        )}
+        {serviceCharge > 0 && (
+          <div className="grid grid-cols-2 gap-4 text-sm mb-2">
+            <span className="font-semibold">Service Charge:</span>
+            <span className="text-right">{formatCurrency(serviceCharge)}</span>
+          </div>
+        )}
+        {otherCharges > 0 && (
+          <div className="grid grid-cols-2 gap-4 text-sm mb-2">
+            <span className="font-semibold">Other Charges:</span>
+            <span className="text-right">{formatCurrency(otherCharges)}</span>
+          </div>
+        )}
+
+        {totalServiceCharges > 0 && (
+          <div className="grid grid-cols-2 gap-4 text-sm mb-2">
+            <span className="font-semibold">Labour / Service Charges:</span>
+            <span className="text-right">{formatCurrency(totalServiceCharges)}</span>
+          </div>
+        )}
+
         <div className="grid grid-cols-2 gap-4 text-lg font-bold border-t-2 border-b-2 border-black py-2">
           <span>Total Amount Due:</span>
           <span className="text-right">{formatCurrency(sale.total)}</span>

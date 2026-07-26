@@ -45,6 +45,10 @@ export default function AdminDashboard() {
     { icon: ShoppingCart, label: 'Sales', value: stats.totalSales, color: 'bg-pink-50', iconColor: 'text-pink-600' },
     { icon: ShoppingCart, label: 'Purchases', value: stats.totalPurchases, color: 'bg-indigo-50', iconColor: 'text-indigo-600' },
     { icon: TrendingUp, label: 'Total Revenue', value: `₹${(stats.totalRevenue || 0).toFixed(2)}`, color: 'bg-cyan-50', iconColor: 'text-cyan-600' },
+    { icon: TrendingUp, label: 'Parts Revenue', value: `₹${(stats.partsRevenue || (stats.stats && stats.stats.partsRevenue) || 0).toFixed(2)}`, color: 'bg-white', iconColor: 'text-sky-600' },
+    { icon: TrendingUp, label: 'Labour / Service Charges', value: `₹${(stats.labourRevenue || (stats.stats && stats.stats.labourRevenue) || 0).toFixed(2)}`, color: 'bg-white', iconColor: 'text-rose-600' },
+    // If platform tracks profit elsewhere, keep showing it
+    ...(stats.stats && stats.stats.totalProfit ? [{ icon: Activity, label: 'Total Profit', value: `₹${(stats.stats.totalProfit || 0).toFixed(2)}`, color: 'bg-lime-50', iconColor: 'text-lime-600' }] : []),
     { icon: Activity, label: 'Active Users', value: stats.activeUsers, color: 'bg-lime-50', iconColor: 'text-lime-600' },
   ]
 

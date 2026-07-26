@@ -12,6 +12,7 @@ export default function Dashboard() {
     expensesToday: 0,
     receivables: 0,
     lowStockCount: 0,
+    totalRevenue: 0,
   })
 
   useEffect(() => {
@@ -21,6 +22,7 @@ export default function Dashboard() {
       expensesToday: store.getTotalTodaysExpenses(),
       receivables: store.getTotalReceivables(),
       lowStockCount: store.getLowStockProducts(10).length,
+      totalRevenue: store.getTotalRevenue(),
     })
   }, [store.sales, store.purchases, store.expenses, store.customers, store.products])
 
@@ -59,6 +61,12 @@ export default function Dashboard() {
           title="Purchases Today"
           value={formatMoney(stats.purchasesToday)}
           color="red"
+        />
+        <StatCard
+          icon={IndianRupee}
+          title="Total Revenue"
+          value={formatMoney(stats.totalRevenue)}
+          color="cyan"
         />
         <StatCard
           icon={Users}

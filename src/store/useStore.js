@@ -554,6 +554,18 @@ const useStore = create((set, get) => ({
     return get().getExpensesToday().reduce((sum, e) => sum + toNumber(e.amount), 0)
   },
 
+  getTotalRevenue: () => {
+    return get().sales.reduce((sum, s) => {
+      const partsTotal = Array.isArray(s.items) ? s.items.reduce((a, i) => a + toNumber(i.amount), 0) : 0
+      const mech = toNumber(s.mechanicCharge) || 0
+      const labour = toNumber(s.labourCharge) || 0
+      const install = toNumber(s.installationCharge) || 0
+      const service = toNumber(s.serviceCharge) || 0
+      const other = toNumber(s.otherCharges) || 0
+      return sum + partsTotal + mech + labour + install + service + other
+    }, 0)
+  },
+
   getLowStockProducts: (threshold = 10) => {
     return get().products.filter(p => toNumber(p.stock) <= threshold)
   },

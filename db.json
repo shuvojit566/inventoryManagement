@@ -7,10 +7,323 @@
       "gstin": ""
     }
   ],
-  "products": [],
-  "customers": [],
-  "sales": [],
-  "purchases": [],
+  "products": [
+    {
+      "stock": 49,
+      "unit": "pcs",
+      "gst": 0,
+      "name": "Motor 900",
+      "purchasePrice": 3500,
+      "sellingPrice": 4500,
+      "price": 4500,
+      "category": "",
+      "description": "",
+      "id": "p1785072807003",
+      "userId": "u1785069513601"
+    },
+    {
+      "stock": 47,
+      "unit": "pcs",
+      "gst": 0,
+      "name": "Controller",
+      "purchasePrice": 2500,
+      "sellingPrice": 3500,
+      "price": 3500,
+      "category": "",
+      "description": "",
+      "id": "p1785072846143",
+      "userId": "u1785069513601"
+    },
+    {
+      "stock": 89,
+      "unit": "pcs",
+      "gst": 0,
+      "name": "Fog Light 48v",
+      "purchasePrice": 100,
+      "sellingPrice": 150,
+      "price": 150,
+      "category": "",
+      "description": "",
+      "id": "p1785072879876",
+      "userId": "u1785069513601"
+    }
+  ],
+  "customers": [
+    {
+      "name": "7 Horn",
+      "phone": "7865862425",
+      "balance": 0,
+      "type": "purchased",
+      "id": "c1785072685351",
+      "userId": "u1785069513601"
+    },
+    {
+      "name": "GY",
+      "phone": "8965847856",
+      "balance": 0,
+      "type": "purchased",
+      "id": "c1785072711712",
+      "userId": "u1785069513601"
+    },
+    {
+      "name": "DANI",
+      "phone": "8965847860",
+      "balance": 0,
+      "type": "purchased",
+      "id": "c1785072755450",
+      "userId": "u1785069513601"
+    },
+    {
+      "name": "Abhijit Biswas",
+      "phone": "7865862924",
+      "email": "bshuvojit566@gmail.com",
+      "address": "VILL- JAVA, P.O- MAHATPUR, P.S- KOTWALI, DIST- NADIA, PIN- 741164",
+      "gst": "jjgdfg51545",
+      "balance": 0,
+      "type": "selling",
+      "id": "c1785072970727",
+      "userId": "u1785069513601"
+    },
+    {
+      "name": "Shuvojit Biswas",
+      "phone": "8695847826",
+      "email": "biswasshuvojit18@gmail.com",
+      "address": "VILL- JAVA, P.O- MAHATPUR, P.S- KOTWALI, DIST- NADIA, PIN- 741164",
+      "gst": "dfdf",
+      "balance": 0,
+      "type": "selling",
+      "id": "c1785073645519",
+      "userId": "u1785069513601"
+    }
+  ],
+  "sales": [
+    {
+      "date": "2026-07-26T00:00:00.000Z",
+      "customerId": "c1785072970727",
+      "phone": "7865862924",
+      "billingAddress": "",
+      "stateOfSupply": "",
+      "mechanicCharge": 1500,
+      "received": 0,
+      "balance": 9650,
+      "items": [
+        {
+          "productId": "p1785072807003",
+          "qty": 1,
+          "unit": "pcs",
+          "price": 4500,
+          "discount": 0,
+          "tax": 0,
+          "amount": 4500
+        },
+        {
+          "productId": "p1785072846143",
+          "qty": 1,
+          "unit": "pcs",
+          "price": 3500,
+          "discount": 0,
+          "tax": 0,
+          "amount": 3500
+        },
+        {
+          "productId": "p1785072879876",
+          "qty": 1,
+          "unit": "pcs",
+          "price": 150,
+          "discount": 0,
+          "tax": 0,
+          "amount": 150
+        }
+      ],
+      "total": 9650,
+      "paymentMode": "cash",
+      "taxMode": "inclusive",
+      "id": 1785073012836,
+      "userId": "u1785069513601"
+    },
+    {
+      "date": "2026-07-26T00:00:00.000Z",
+      "customerId": "c1785073645519",
+      "phone": "8695847826",
+      "billingAddress": "",
+      "stateOfSupply": "",
+      "mechanicCharge": 100,
+      "labourCharge": 0,
+      "installationCharge": 0,
+      "serviceCharge": 0,
+      "otherCharges": 0,
+      "received": 0,
+      "balance": 850,
+      "items": [
+        {
+          "productId": "p1785072879876",
+          "qty": 5,
+          "unit": "pcs",
+          "price": 150,
+          "discount": 0,
+          "tax": 0,
+          "amount": 750
+        }
+      ],
+      "total": 850,
+      "paymentMode": "cash",
+      "taxMode": "exclusive",
+      "id": 1785073686504,
+      "userId": "u1785069513601"
+    },
+    {
+      "date": "2026-07-26T00:00:00.000Z",
+      "customerId": "c1785073645519",
+      "phone": "8695847826",
+      "billingAddress": "",
+      "stateOfSupply": "",
+      "mechanicCharge": 100,
+      "labourCharge": 0,
+      "installationCharge": 0,
+      "serviceCharge": 0,
+      "otherCharges": 0,
+      "received": 0,
+      "balance": 850,
+      "items": [
+        {
+          "productId": "p1785072879876",
+          "qty": 5,
+          "unit": "pcs",
+          "price": 150,
+          "discount": 0,
+          "tax": 0,
+          "amount": 750
+        }
+      ],
+      "total": 850,
+      "paymentMode": "cash",
+      "taxMode": "exclusive",
+      "id": 1785073716053,
+      "userId": "u1785069513601"
+    },
+    {
+      "date": "2026-07-26T00:00:00.000Z",
+      "customerId": "c1785072970727",
+      "phone": "8695847826",
+      "billingAddress": "VILL- JAVA, P.O- MAHATPUR, P.S- KOTWALI, DIST- NADIA, PIN- 741164",
+      "stateOfSupply": "",
+      "mechanicCharge": 0,
+      "labourCharge": 0,
+      "installationCharge": 0,
+      "serviceCharge": 0,
+      "otherCharges": 0,
+      "received": 0,
+      "balance": 3500,
+      "items": [
+        {
+          "productId": "p1785072846143",
+          "qty": 1,
+          "unit": "pcs",
+          "price": 3500,
+          "discount": 0,
+          "tax": 0,
+          "amount": 3500
+        }
+      ],
+      "total": 3500,
+      "paymentMode": "cash",
+      "taxMode": "exclusive",
+      "id": 1785074569276,
+      "userId": "u1785069513601"
+    },
+    {
+      "date": "2026-07-26T00:00:00.000Z",
+      "customerId": "c1785073645519",
+      "phone": "8695847826",
+      "billingAddress": "",
+      "stateOfSupply": "Uttar Pradesh",
+      "mechanicCharge": 0,
+      "labourCharge": 0,
+      "installationCharge": 0,
+      "serviceCharge": 0,
+      "otherCharges": 0,
+      "received": 0,
+      "balance": 3500,
+      "items": [
+        {
+          "productId": "p1785072846143",
+          "qty": 1,
+          "unit": "pcs",
+          "price": 3500,
+          "discount": 0,
+          "tax": 0,
+          "amount": 3500
+        }
+      ],
+      "total": 3500,
+      "paymentMode": "cash",
+      "taxMode": "inclusive",
+      "id": 1785074744677,
+      "userId": "u1785069513601"
+    }
+  ],
+  "purchases": [
+    {
+      "date": "2026-07-26T13:33:32.050Z",
+      "supplierId": "c1785072685351",
+      "items": [
+        {
+          "productId": "p1785072807003",
+          "qty": 50,
+          "price": 3500,
+          "unit": "pcs",
+          "discount": 0,
+          "tax": 0,
+          "amount": 175000
+        }
+      ],
+      "total": 175000,
+      "paymentMode": "cash",
+      "taxMode": "inclusive",
+      "id": 1785072812050,
+      "userId": "u1785069513601"
+    },
+    {
+      "date": "2026-07-26T13:34:11.130Z",
+      "supplierId": "c1785072711712",
+      "items": [
+        {
+          "productId": "p1785072846143",
+          "qty": 50,
+          "price": 2500,
+          "unit": "pcs",
+          "discount": 0,
+          "tax": 0,
+          "amount": 125000
+        }
+      ],
+      "total": 125000,
+      "paymentMode": "cash",
+      "taxMode": "inclusive",
+      "id": 1785072851130,
+      "userId": "u1785069513601"
+    },
+    {
+      "date": "2026-07-26T13:34:47.135Z",
+      "supplierId": "c1785072755450",
+      "items": [
+        {
+          "productId": "p1785072879876",
+          "qty": 100,
+          "price": 100,
+          "unit": "pcs",
+          "discount": 0,
+          "tax": 0,
+          "amount": 10000
+        }
+      ],
+      "total": 10000,
+      "paymentMode": "cash",
+      "taxMode": "inclusive",
+      "id": 1785072887135,
+      "userId": "u1785069513601"
+    }
+  ],
   "expenses": [],
   "settings": [
     {

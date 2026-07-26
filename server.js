@@ -399,7 +399,23 @@ server.get('/admin/dashboard-stats', isAdmin, (req, res) => {
 
   const totalSalesAmount = sales.reduce((sum, s) => sum + (parseFloat(s.total) || 0), 0)
   const totalPurchasesAmount = purchases.reduce((sum, p) => sum + (parseFloat(p.total) || 0), 0)
-  const totalRevenue = totalSalesAmount
+
+  // Calculate parts revenue (sum of product line amounts) and labour/service revenue (sum of various service fields)
+  const partsRevenue = sales.reduce((sum, s) => {
+    const partsTotal = Array.isArray(s.items) ? s.items.reduce((a, i) => a + (parseFloat(i.amount) || 0), 0) : 0
+    return sum + partsTotal
+  }, 0)
+
+  const labourRevenue = sales.reduce((sum, s) => {
+    const mech = parseFloat(s.mechanicCharge) || 0
+    const labour = parseFloat(s.labourCharge) || 0
+    const install = parseFloat(s.installationCharge) || 0
+    const service = parseFloat(s.serviceCharge) || 0
+    const other = parseFloat(s.otherCharges) || 0
+    return sum + mech + labour + install + service + other
+  }, 0)
+
+  const totalRevenue = partsRevenue + labourRevenue
   const activeUsers = users.filter(u => u.status === 'active').length
   const recentUsers = users.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5)
 
@@ -411,11 +427,15 @@ server.get('/admin/dashboard-stats', isAdmin, (req, res) => {
     totalSales: sales.length,
     totalPurchases: purchases.length,
     totalRevenue,
+    partsRevenue,
+    labourRevenue,
     activeUsers,
     recentUsers: recentUsers.map(omitPassword),
     stats: {
       totalSalesAmount,
       totalPurchasesAmount,
+      partsRevenue,
+      labourRevenue,
     },
   })
 })
