@@ -41,7 +41,7 @@
       "createdAt": "2026-01-01T00:00:00.000Z",
       "role": "ADMIN",
       "status": "active",
-      "lastLogin": "2026-07-26T12:04:07.033Z"
+      "lastLogin": "2026-07-26T12:12:37.353Z"
     },
     {
       "id": "u1785062231458",
@@ -60,7 +60,8 @@
       "createdAt": "2026-07-26T10:37:11.458Z",
       "role": "USER",
       "status": "active",
-      "lastLogin": "2026-07-26T10:37:11.458Z"
+      "lastLogin": "2026-07-26T10:37:11.458Z",
+      "updatedAt": "2026-07-26T12:15:35.584Z"
     }
   ]
 }
