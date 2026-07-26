@@ -1,36 +1,51 @@
 ﻿// Get API base URL from environment or detect current server
 const getAPIBase = () => {
-  // If explicitly set in environment, use it
+  // CRITICAL: If explicitly set in environment, ALWAYS use it (production)
   if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL
+    const url = import.meta.env.VITE_API_URL.trim()
+    if (url) {
+      console.debug('[API] Using VITE_API_URL from environment:', url)
+      return url
+    }
   }
 
-  // For production or when accessed from different host
+  // Development environment detection
   if (typeof window !== 'undefined') {
     const protocol = window.location.protocol // http: or https:
     const hostname = window.location.hostname // localhost, 127.0.0.1, or IP
     const port = window.location.port
     
-    // If running on same server (frontend and backend on same host)
-    // Use /api path or port 4000 if explicitly needed
-    if (port === '5173' || port === '') {
-      // Dev server on port 5173, connect to backend on port 4000
-      return `${protocol}//${hostname}:4000`
+    // Development: Vite dev server on port 5173
+    if (port === '5173') {
+      const devUrl = `${protocol}//${hostname}:4000`
+      console.debug('[API] Dev mode detected (port 5173), using backend:', devUrl)
+      return devUrl
     }
     
-    // For production on same host
-    if (port === '' || port === '80' || port === '443') {
-      // Frontend served from root, assume backend is at /api or same origin
-      // First try same origin, then fall back to port 4000
-      return `${protocol}//${hostname}`
+    // Local network: Check if running on machine IP (e.g., 192.168.x.x)
+    if (hostname !== 'localhost' && hostname !== '127.0.0.1' && !hostname.includes('.')) {
+      // Local IP detected (like 192.168.1.100)
+      const localUrl = `${protocol}//${hostname}:4000`
+      console.debug('[API] Local network detected, using backend:', localUrl)
+      return localUrl
     }
     
-    // Fallback: use current host and port 4000
-    return `${protocol}//${hostname}:4000`
+    // Production warning: No VITE_API_URL set
+    // This will fail! Environment variable must be set for production
+    const fallbackUrl = `${protocol}//${hostname}:4000`
+    console.warn(
+      '[API] WARNING: VITE_API_URL not set for production. ' +
+      'This will likely fail. Expected to connect to: ' + fallbackUrl +
+      '\nFix: Set VITE_API_URL environment variable in Netlify build settings.'
+    )
+    return fallbackUrl
   }
 
-  // Fallback for SSR or non-browser environments
-  return 'http://localhost:4000'
+  // Server-side rendering or non-browser environment
+  // This fallback won't work - environment variable MUST be set
+  const fallback = 'http://localhost:4000'
+  console.error('[API] No browser environment. Returning fallback:', fallback)
+  return fallback
 }
 
 const API_BASE = getAPIBase()

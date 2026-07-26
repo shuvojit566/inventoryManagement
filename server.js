@@ -6,11 +6,37 @@ const server = jsonServer.create()
 const router = jsonServer.router(path.join(__dirname, 'db.json'))
 const middlewares = jsonServer.defaults({})
 
-// Configure CORS to allow requests from any origin (for development and mobile access)
+// Configure CORS with environment-specific settings
 server.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*')
+  const origin = req.headers.origin
+  const nodeEnv = process.env.NODE_ENV || 'development'
+  
+  // List of allowed origins
+  const allowedOrigins = [
+    'http://localhost:5173',          // Local Vite dev
+    'http://localhost:3000',          // Local production build
+    'http://127.0.0.1:5173',          // Local fallback
+    'http://127.0.0.1:3000',          // Local fallback
+    'http://localhost',               // Localhost
+    process.env.FRONTEND_URL,         // Production frontend from env
+  ].filter(url => url && url.trim())  // Filter out empty strings
+  
+  // In development: allow all origins for easier testing
+  if (nodeEnv === 'development' || process.env.ALLOW_ALL_CORS === 'true') {
+    res.header('Access-Control-Allow-Origin', '*')
+  } else {
+    // In production: only allow specific origins
+    if (origin && allowedOrigins.includes(origin)) {
+      res.header('Access-Control-Allow-Origin', origin)
+    } else if (origin) {
+      // Log rejected origins for debugging
+      console.warn(`[CORS] Rejected origin: ${origin}`)
+    }
+  }
+  
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  res.header('Access-Control-Allow-Credentials', 'true')
   res.header('Access-Control-Max-Age', '86400')
   
   // Handle preflight requests
