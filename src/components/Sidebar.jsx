@@ -19,7 +19,7 @@ export default function Sidebar() {
   return (
     <aside className="w-64 bg-white border-r h-screen sticky top-0 flex flex-col">
       <div className="p-4 border-b">
-        <h1 className="text-lg font-bold text-gray-900">📊 EasyInventory</h1>
+        <h1 className="text-lg font-bold text-gray-900"> EasyInventory</h1>
         <p className="text-xs text-gray-500 mt-1">Inventory Management</p>
       </div>
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
