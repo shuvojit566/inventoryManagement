@@ -63,9 +63,9 @@ function getSavedSession() {
 function getAuthHeaders() {
   const session = getSavedSession()
   const userId = session?.id || session?.userId
-  return userId ? { Authorization: `Bearer ${userId}` } : {}
+  // Attach a simple Bearer-style header if a session exists. Backend should validate this token if needed.
+  return userId ? { Authorization: 'Bearer ' + userId } : {}
 }
-
 async function request(path, options = {}) {
   const headers = {
     ...getAuthHeaders(),
@@ -358,3 +358,5 @@ export function getTodayDateStr() {
   const d = new Date()
   return d.toISOString().split('T')[0]
 }
+
+
