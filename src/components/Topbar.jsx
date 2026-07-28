@@ -240,7 +240,11 @@ export default function Topbar() {
         </div>
         <div className="text-xs">
           <span className="text-gray-500">Account:</span>
-          <span className="font-semibold text-gray-900 ml-1">{currentUser?.businessName || 'My Account'}</span>
+          <span className="font-semibold text-gray-900 ml-1">
+            {currentUser?.role === 'MANAGER' && currentUser?.businessName && currentUser?.fullName
+              ? `${currentUser.businessName} • ${currentUser.fullName}`
+              : currentUser?.businessName || 'My Account'}
+          </span>
         </div>
         <div className="w-2 h-2 rounded-full bg-green-500"></div>
         <span className="text-xs text-green-600 font-medium">Connected</span>

@@ -1,4 +1,4 @@
-﻿import React from 'react'
+﻿import React, { useEffect } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Sidebar from './components/Sidebar'
 import Topbar from './components/Topbar'
@@ -183,7 +183,9 @@ function App() {
         element={
           <ProtectedRoute>
             <MainLayout>
-              <Settings />
+              <RoleRestrictedRoute>
+                <Settings />
+              </RoleRestrictedRoute>
             </MainLayout>
           </ProtectedRoute>
         }
@@ -193,7 +195,21 @@ function App() {
         element={
           <ProtectedRoute>
             <MainLayout>
-              <Profile />
+              <RoleRestrictedRoute>
+                <Profile />
+              </RoleRestrictedRoute>
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/manage-users"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <RoleRestrictedRoute>
+                <Settings />
+              </RoleRestrictedRoute>
             </MainLayout>
           </ProtectedRoute>
         }
@@ -210,6 +226,30 @@ function ProtectedRoute({ children }) {
   if (!currentUser || currentUser.role === 'ADMIN') {
     return <Navigate to="/login" state={{ from: location }} replace />
   }
+  return children
+}
+
+function RoleRestrictedRoute({ children }) {
+  const currentUser = useStore(state => state.currentUser)
+  const location = useLocation()
+  const setToast = useStore(state => state.setToast)
+  const restrictedPaths = ['/profile', '/settings', '/manage-users']
+  const isRestricted = currentUser?.role === 'MANAGER' && restrictedPaths.includes(location.pathname)
+
+  useEffect(() => {
+    if (isRestricted) {
+      setToast('Access Restricted: Profile management is restricted to Owners.')
+    }
+  }, [isRestricted, setToast])
+
+  if (!currentUser) {
+    return <Navigate to="/login" state={{ from: location }} replace />
+  }
+
+  if (isRestricted) {
+    return <Navigate to="/dashboard" replace />
+  }
+
   return children
 }
 
@@ -239,6 +279,15 @@ function AdminGuestGuard({ children }) {
 }
 
 function MainLayout({ children }) {
+  const toastMessage = useStore(state => state.toastMessage)
+  const clearToast = useStore(state => state.clearToast)
+
+  useEffect(() => {
+    if (!toastMessage) return
+    const timer = window.setTimeout(() => clearToast(), 4000)
+    return () => window.clearTimeout(timer)
+  }, [toastMessage, clearToast])
+
   return (
     <div className="min-h-screen flex">
       <Sidebar />
@@ -246,6 +295,12 @@ function MainLayout({ children }) {
         <Topbar />
         <main className="p-4 overflow-auto flex-1">{children}</main>
       </div>
+      {toastMessage ? (
+        <div className="fixed bottom-4 right-4 z-50 max-w-sm rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 shadow-lg text-sm text-amber-900 flex items-start gap-3">
+          <span>{toastMessage}</span>
+          <button type="button" onClick={clearToast} className="font-semibold">×</button>
+        </div>
+      ) : null}
     </div>
   )
 }

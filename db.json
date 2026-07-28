@@ -5,6 +5,12 @@
       "userId": "u1785069513601",
       "name": "BTRAP",
       "gstin": ""
+    },
+    {
+      "id": "b1785266417714",
+      "userId": "u1785266417706",
+      "name": "E-Service Center",
+      "gstin": ""
     }
   ],
   "products": [
@@ -1049,6 +1055,15 @@
       "passcodeLock": false,
       "auditTrail": true,
       "printTheme": "GST Theme 1"
+    },
+    {
+      "id": "s1785266417716",
+      "userId": "u1785266417706",
+      "requireGSTIN": false,
+      "stopOnNegativeStock": true,
+      "passcodeLock": false,
+      "auditTrail": true,
+      "printTheme": "GST Theme 1"
     }
   ],
   "users": [
@@ -1069,7 +1084,7 @@
       "createdAt": "2026-01-01T00:00:00.000Z",
       "role": "ADMIN",
       "status": "active",
-      "lastLogin": "2026-07-28T04:28:08.458Z"
+      "lastLogin": "2026-07-28T18:48:52.980Z"
     },
     {
       "id": "u1785069513601",
@@ -1087,7 +1102,44 @@
       "taxSettings": "GST",
       "createdAt": "2026-07-26T12:38:33.601Z",
       "status": "active",
-      "updatedAt": "2026-07-28T04:28:41.395Z"
+      "updatedAt": "2026-07-28T04:28:41.395Z",
+      "role": "OWNER"
+    },
+    {
+      "id": "u1785266417706",
+      "fullName": "Abhijit Biswas",
+      "businessName": "E-Service Center",
+      "email": "abhijit.new18@gmail.com",
+      "phone": "7865862924",
+      "passwordHash": "df9f53849a09eb3ebc4710c2bdb976fe75abff3cf4bd0ed94365ebc85c687cd6",
+      "gstNumber": "",
+      "businessAddress": "",
+      "businessType": "",
+      "logoUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTM5e6rJFoBW-V4iGWCAGNpSSjJasN-pvSnVnZc0_Bc9g&s",
+      "invoicePrefix": "INV",
+      "currency": "INR",
+      "taxSettings": "GST",
+      "role": "OWNER",
+      "createdAt": "2026-07-28T19:20:17.706Z"
+    },
+    {
+      "id": "u1785267071352",
+      "fullName": "Abhijit Biswas",
+      "businessName": "BTRAP",
+      "email": "xzf@gmail.com",
+      "phone": "",
+      "passwordHash": "1bea44bfa1f9e9dc7c6c1bafcb680429b7167a0433255cb53403034514a2331b",
+      "gstNumber": "",
+      "businessAddress": "",
+      "businessType": "",
+      "logoUrl": "",
+      "invoicePrefix": "INV",
+      "currency": "INR",
+      "taxSettings": "GST",
+      "role": "MANAGER",
+      "managedOwnerId": "u1785069513601",
+      "createdBy": "u1785069513601",
+      "createdAt": "2026-07-28T19:31:11.352Z"
     }
   ]
 }

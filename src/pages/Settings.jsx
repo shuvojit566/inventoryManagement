@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import SettingsPanel from '../components/SettingsPanel'
 import DeleteAccountModal from '../components/DeleteAccountModal'
 import useStore from '../store/useStore'
@@ -8,7 +8,12 @@ import { Settings as SettingsIcon, Package, Users, DollarSign, Trash2 } from 'lu
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('general')
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [managerForm, setManagerForm] = useState({ fullName: '', email: '', temporaryPassword: '' })
+  const [managerFeedback, setManagerFeedback] = useState({ type: '', message: '' })
+  const [isCreatingManager, setIsCreatingManager] = useState(false)
+  const [managers, setManagers] = useState([])
   const store = useStore()
+  const isOwner = store.currentUser?.role === 'OWNER'
 
   const userData = {
     products: store.products.length,
@@ -38,6 +43,55 @@ export default function Settings() {
       </button>
     </div>
   )
+
+  const handleCreateManager = async event => {
+    event.preventDefault()
+    if (!managerForm.fullName || !managerForm.email || !managerForm.temporaryPassword) {
+      setManagerFeedback({ type: 'error', message: 'Please fill in all fields.' })
+      return
+    }
+
+    try {
+      setIsCreatingManager(true)
+      setManagerFeedback({ type: '', message: '' })
+      await store.createManager(managerForm)
+      setManagerFeedback({ type: 'success', message: 'Manager account created successfully.' })
+      setManagerForm({ fullName: '', email: '', temporaryPassword: '' })
+      await loadManagers()
+    } catch (error) {
+      setManagerFeedback({ type: 'error', message: error.message || 'Failed to create manager account.' })
+    } finally {
+      setIsCreatingManager(false)
+    }
+  }
+
+  const loadManagers = async () => {
+    if (!store.currentUser?.id) return
+    try {
+      const sessionRaw = window.localStorage.getItem('inventory-session') || window.sessionStorage.getItem('inventory-session')
+      const session = sessionRaw ? JSON.parse(sessionRaw) : null
+      const userId = session?.id || session?.userId || store.currentUser.id
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/users?role=MANAGER`, {
+        headers: {
+          Authorization: `Bearer ${userId}`,
+          'X-User-Id': userId,
+        },
+      })
+      const data = await response.json()
+      if (Array.isArray(data)) {
+        setManagers(data.filter(manager => (manager.managedOwnerId || manager.createdBy) === store.currentUser.id))
+      }
+    } catch (error) {
+      console.error('Failed to load managers', error)
+    }
+  }
+
+  useEffect(() => {
+    if (isOwner) {
+      loadManagers()
+    }
+  }, [isOwner, store.currentUser?.id])
 
   return (
     <div className="space-y-6">
@@ -162,6 +216,83 @@ export default function Settings() {
               </div>
             </div>
           </div>
+
+          {isOwner && (
+            <div className="bg-white border rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Manage Staff / Managers</h3>
+              <p className="text-xs text-gray-600 mb-4">
+                Create a manager account for your team. Managers can access sales, purchases, inventory, and dashboard workflows, but they cannot modify profile or account settings.
+              </p>
+
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold text-gray-800 mb-2">Active Managers</h4>
+                {managers.length === 0 ? (
+                  <div className="text-xs text-gray-500">No managers created yet.</div>
+                ) : (
+                  <div className="space-y-2">
+                    {managers.map(manager => (
+                      <div key={manager.id} className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">{manager.fullName}</div>
+                          <div className="text-xs text-gray-500">{manager.email || 'No email'} • {manager.businessName || 'Business not set'}</div>
+                        </div>
+                        <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+                          Active
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <form onSubmit={handleCreateManager} className="space-y-3">
+                <div className="grid md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Full Name</label>
+                    <input
+                      type="text"
+                      value={managerForm.fullName}
+                      onChange={event => setManagerForm({ ...managerForm, fullName: event.target.value })}
+                      className="w-full px-3 py-2 border rounded-lg text-sm"
+                      placeholder="Manager Name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Email</label>
+                    <input
+                      type="email"
+                      value={managerForm.email}
+                      onChange={event => setManagerForm({ ...managerForm, email: event.target.value })}
+                      className="w-full px-3 py-2 border rounded-lg text-sm"
+                      placeholder="manager@example.com"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Temporary Password</label>
+                  <input
+                    type="password"
+                    value={managerForm.temporaryPassword}
+                    onChange={event => setManagerForm({ ...managerForm, temporaryPassword: event.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg text-sm"
+                    placeholder="Create a temporary password"
+                  />
+                </div>
+                {managerFeedback.message && (
+                  <div className={`rounded-lg border px-3 py-2 text-sm ${managerFeedback.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-red-50 border-red-200 text-red-700'}`}>
+                    {managerFeedback.message}
+                  </div>
+                )}
+                <button
+                  type="submit"
+                  disabled={isCreatingManager}
+                  className="px-4 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 disabled:bg-gray-400 rounded-lg transition"
+                >
+                  {isCreatingManager ? 'Creating...' : 'Create Manager'}
+                </button>
+              </form>
+            </div>
+          )}
 
           {/* Data Statistics */}
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">

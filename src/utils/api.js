@@ -51,6 +51,13 @@ const getAPIBase = () => {
 const API_BASE = getAPIBase()
 
 function getSavedSession() {
+  if (typeof window === 'undefined') return null
+
+  const snapshot = window.__inventorySessionSnapshot
+  if (snapshot && (snapshot.id || snapshot.userId)) {
+    return snapshot
+  }
+
   const raw = window.localStorage.getItem('inventory-session') || window.sessionStorage.getItem('inventory-session')
   if (!raw) return null
   try {
@@ -64,7 +71,10 @@ function getAuthHeaders() {
   const session = getSavedSession()
   const userId = session?.id || session?.userId
   // Attach a simple Bearer-style header if a session exists. Backend should validate this token if needed.
-  return userId ? { Authorization: 'Bearer ' + userId } : {}
+  return userId ? {
+    Authorization: 'Bearer ' + userId,
+    'X-User-Id': userId,
+  } : {}
 }
 async function request(path, options = {}) {
   const headers = {
@@ -130,6 +140,14 @@ export async function registerUser(payload) {
 
 export async function resetPassword(payload) {
   return request('/reset-password', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function createManager(payload) {
+  return request('/users/create-manager', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),

@@ -85,6 +85,20 @@ const DEFAULT_SETTINGS = {
   printTheme: 'GST Theme 1',
 }
 
+const syncSessionSnapshot = (user) => {
+  if (typeof window !== 'undefined') {
+    window.__inventorySessionSnapshot = user ? { ...user } : null
+  }
+}
+
+const getEffectiveUserId = (user) => {
+  if (!user) return null
+  if (user.role === 'MANAGER') {
+    return user.managedOwnerId || user.createdBy || user.id || null
+  }
+  return user.id || null
+}
+
 const useStore = create((set, get) => ({
   businesses: [],
   activeBusinessId: null,
@@ -99,21 +113,29 @@ const useStore = create((set, get) => ({
   authLoading: false,
   loading: false,
   error: null,
+  toastMessage: null,
 
   restoreSession: () => {
     const raw = window.localStorage.getItem('inventory-session') || window.sessionStorage.getItem('inventory-session')
-    if (!raw) return null
+    if (!raw) {
+      syncSessionSnapshot(null)
+      return null
+    }
     try {
-      const currentUser = JSON.parse(raw)
+      const parsed = JSON.parse(raw)
+      const currentUser = { ...parsed, role: (parsed.role || 'OWNER') }
+      syncSessionSnapshot(currentUser)
       set({ currentUser, authError: null })
       return currentUser
     } catch {
+      syncSessionSnapshot(null)
       return null
     }
   },
 
   saveSession: (user, remember = true) => {
-    const raw = JSON.stringify(user)
+    const normalizedUser = { ...(user || {}), role: (user?.role || 'OWNER') }
+    const raw = JSON.stringify(normalizedUser)
     if (remember) {
       window.localStorage.setItem('inventory-session', raw)
       window.sessionStorage.removeItem('inventory-session')
@@ -121,10 +143,15 @@ const useStore = create((set, get) => ({
       window.sessionStorage.setItem('inventory-session', raw)
       window.localStorage.removeItem('inventory-session')
     }
-    set({ currentUser: user, authError: null })
+    syncSessionSnapshot(normalizedUser)
+    set({ currentUser: normalizedUser, authError: null })
   },
 
+  setToast: (toastMessage) => set({ toastMessage }),
+  clearToast: () => set({ toastMessage: null }),
+
   clearSession: () => {
+    syncSessionSnapshot(null)
     window.localStorage.removeItem('inventory-session')
     window.sessionStorage.removeItem('inventory-session')
     set({
@@ -233,16 +260,26 @@ const useStore = create((set, get) => ({
     }
   },
 
+  createManager: async ({ fullName, email, temporaryPassword }) => {
+    try {
+      const createdUser = await api.createManager({ fullName, email, temporaryPassword })
+      return createdUser
+    } catch (err) {
+      set({ error: err.message })
+      throw err
+    }
+  },
+
   initStore: async () => {
     set({ loading: true, error: null })
     const currentUser = get().currentUser
-    if (!currentUser?.id) {
+    const userId = getEffectiveUserId(currentUser)
+    if (!userId) {
       set({ loading: false })
       return
     }
 
     try {
-      const userId = currentUser.id
       const [businesses, products, customers, sales, purchases, expenses, settings] = await Promise.all([
         api.fetchBusinesses(userId),
         api.fetchProducts(userId),
@@ -271,7 +308,8 @@ const useStore = create((set, get) => ({
 
   refreshProducts: async () => {
     try {
-      const products = await api.fetchProducts(get().currentUser?.id)
+      const userId = getEffectiveUserId(get().currentUser)
+      const products = await api.fetchProducts(userId)
       set({ products: products.map(normalizeProduct) })
       return products
     } catch (err) {

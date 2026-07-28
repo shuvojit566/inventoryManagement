@@ -35,7 +35,7 @@ server.use((req, res, next) => {
   }
   
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-User-Id')
   res.header('Access-Control-Allow-Credentials', 'true')
   res.header('Access-Control-Max-Age', '86400')
   
@@ -58,6 +58,56 @@ function omitPassword(user) {
   return rest
 }
 
+function normalizeUser(user) {
+  if (!user) return null
+  const role = user.role || 'OWNER'
+  return { ...user, role }
+}
+
+function getUserById(userId) {
+  return normalizeUser(router.db.get('users').find({ id: userId }).value())
+}
+
+function getRequestUserId(req) {
+  const auth = req.headers.authorization || ''
+  const authUserId = auth.startsWith('Bearer ') ? auth.slice(7).trim() : null
+  const headerUserId = req.headers['x-user-id'] || req.headers['X-User-Id'] || null
+  const bodyUserId = req.body && req.body.userId ? req.body.userId : null
+  const queryUserId = req.query && req.query.userId ? req.query.userId : null
+  return authUserId || headerUserId || bodyUserId || queryUserId
+}
+
+function getEffectiveUserId(req) {
+  const currentUser = req.user || null
+  if (!currentUser) {
+    return getRequestUserId(req)
+  }
+
+  if (currentUser.role === 'MANAGER') {
+    return currentUser.managedOwnerId || currentUser.createdBy || currentUser.id
+  }
+
+  return currentUser.id || getRequestUserId(req)
+}
+
+function isRestrictedAccountRoute(req) {
+  const path = req.path || ''
+  const isProfileUpdate = /^\/users\/[^/]+$/.test(path) && ['PATCH', 'PUT', 'DELETE'].includes(req.method)
+  const isSettingsRoute = path === '/settings' || /^\/settings\//.test(path)
+  const isAccountRoute = path === '/account'
+  const isPasswordRoute = path === '/reset-password'
+  return isProfileUpdate || isSettingsRoute || isAccountRoute || isPasswordRoute
+}
+
+function authorizeRoles(allowedRoles = []) {
+  return (req, res, next) => {
+    if (!req.user || !allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({ message: 'Access denied. Insufficient permissions.' })
+    }
+    next()
+  }
+}
+
 server.post('/login', (req, res) => {
   const { email, passwordHash } = req.body
   if (!email || !passwordHash) {
@@ -69,7 +119,12 @@ server.post('/login', (req, res) => {
     return res.status(401).json({ error: 'Invalid credentials.' })
   }
 
-  return res.json(omitPassword(user))
+  const normalizedUser = normalizeUser(user)
+  if (normalizedUser.role !== user.role) {
+    router.db.get('users').find({ id: user.id }).assign({ role: normalizedUser.role }).write()
+  }
+
+  return res.json(omitPassword(normalizedUser))
 })
 
 server.post('/admin-login', (req, res) => {
@@ -134,6 +189,7 @@ server.post('/register', (req, res) => {
   }
 
   const id = `u${Date.now()}`
+  const role = 'OWNER'
   const user = {
     id,
     fullName,
@@ -148,6 +204,7 @@ server.post('/register', (req, res) => {
     invoicePrefix: invoicePrefix || 'INV',
     currency: currency || 'INR',
     taxSettings: taxSettings || 'GST',
+    role,
     createdAt: new Date().toISOString(),
   }
 
@@ -181,6 +238,10 @@ server.post('/reset-password', (req, res) => {
     return res.status(400).json({ error: 'Email, phone, and new password are required.' })
   }
 
+  if (req.user && req.user.role === 'MANAGER') {
+    return res.status(403).json({ error: 'Access denied: Managers cannot modify profile or account settings' })
+  }
+
   const normalizedPhone = phone.replace(/\D/g, '')
   const user = router.db
     .get('users')
@@ -204,6 +265,10 @@ server.delete('/account', (req, res) => {
   const { password } = req.body
   if (!password) {
     return res.status(400).json({ error: 'Password is required.' })
+  }
+
+  if (req.user && req.user.role === 'MANAGER') {
+    return res.status(403).json({ error: 'Access denied: Managers cannot modify profile or account settings' })
   }
 
   const auth = req.headers.authorization || ''
@@ -364,6 +429,49 @@ server.post('/admin/users/:id/reset-password', isAdmin, (req, res) => {
   })
 })
 
+server.post('/users/create-manager', (req, res) => {
+  const { fullName, email, temporaryPassword } = req.body
+  if (!fullName || !email || !temporaryPassword) {
+    return res.status(400).json({ error: 'Full name, email, and temporary password are required.' })
+  }
+
+  const requesterId = getRequestUserId(req)
+  const requester = requesterId ? getUserById(requesterId) : null
+  if (!requester || requester.role !== 'OWNER') {
+    return res.status(403).json({ error: 'Access denied: Owners only.' })
+  }
+
+  const existingEmail = router.db.get('users').find({ email }).value()
+  if (existingEmail) {
+    return res.status(400).json({ error: 'Email is already registered.' })
+  }
+
+  const id = `u${Date.now()}`
+  const owner = getUserById(requesterId)
+  const user = {
+    id,
+    fullName,
+    businessName: owner?.businessName || `${fullName}'s Business`,
+    email,
+    phone: '',
+    passwordHash: hashPassword(temporaryPassword),
+    gstNumber: '',
+    businessAddress: '',
+    businessType: '',
+    logoUrl: '',
+    invoicePrefix: 'INV',
+    currency: 'INR',
+    taxSettings: 'GST',
+    role: 'MANAGER',
+    managedOwnerId: requesterId,
+    createdBy: requesterId,
+    createdAt: new Date().toISOString(),
+  }
+
+  router.db.get('users').push(user).write()
+  return res.status(201).json(omitPassword(user))
+})
+
 server.delete('/admin/users/:id', isAdmin, (req, res) => {
   const user = router.db.get('users').find({ id: req.params.id }).value()
   if (!user || user.role === 'ADMIN') {
@@ -446,26 +554,32 @@ server.use((req, res, next) => {
     return next()
   }
 
-  const auth = req.headers.authorization || ''
-  const userId = auth.startsWith('Bearer ') ? auth.slice(7).trim() : null
+  const userId = getRequestUserId(req)
   if (!userId) {
     return res.status(401).json({ error: 'Authentication required.' })
   }
 
   req.userId = userId
+  req.user = getUserById(userId)
+
+  if (req.user && req.user.role === 'MANAGER' && isRestrictedAccountRoute(req)) {
+    return res.status(403).json({ error: 'Access denied: Managers cannot modify profile or account settings' })
+  }
+
+  const effectiveUserId = getEffectiveUserId(req)
 
   if (req.method === 'GET') {
     if (req.path.startsWith('/users')) {
       return next()
     }
     req.query = req.query || {}
-    req.query.userId = userId
+    req.query.userId = effectiveUserId
   }
 
   if (req.method === 'POST') {
     if (!req.path.startsWith('/users')) {
       req.body = req.body || {}
-      req.body.userId = userId
+      req.body.userId = effectiveUserId
     }
   }
 

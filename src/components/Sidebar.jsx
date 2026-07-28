@@ -2,6 +2,7 @@ import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Home, Users, Box, FileText, ShoppingCart, BarChart2, Settings as SettingsIcon } from 'lucide-react'
 import Logo from './Logo'
+import useStore from '../store/useStore'
 
 const sections = [
   { title: 'Dashboard', icon: Home, to: '/dashboard' },
@@ -16,6 +17,10 @@ const sections = [
 
 export default function Sidebar() {
   const loc = useLocation()
+  const currentUser = useStore(state => state.currentUser)
+  const isOwner = currentUser?.role === 'OWNER'
+  const visibleSections = sections.filter(section => isOwner || !['Profile', 'Settings'].includes(section.title))
+
   return (
     <aside className="w-64 bg-white border-r h-screen sticky top-0 flex flex-col">
       <div className="p-4 border-b">
@@ -23,7 +28,7 @@ export default function Sidebar() {
         <p className="text-xs text-gray-500 mt-1">Inventory Management</p>
       </div>
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-        {sections.map(s => {
+        {visibleSections.map(s => {
           const Icon = s.icon
           const active = loc.pathname === s.to
           return (
@@ -43,7 +48,7 @@ export default function Sidebar() {
         })}
       </nav>
       <div className="p-4 border-t bg-gray-50 text-xs text-gray-600">
-        <p>💡 Tip: Use keyboard shortcuts for faster navigation</p>
+        {currentUser?.role ? <div className="font-medium text-slate-700">Role: {currentUser.role}</div> : null}
       </div>
     </aside>
   )
