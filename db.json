@@ -457,7 +457,23 @@
       "lastPaymentDate": "2026-07-28",
       "lastPaymentMethod": "cash",
       "lastPaymentNotes": "",
-      "status": "Pending"
+      "status": "Paid",
+      "payments": [
+        {
+          "id": "pay1785263307824",
+          "date": "2026-07-28",
+          "amount": 500,
+          "method": "cash",
+          "notes": ""
+        },
+        {
+          "id": "pay1785263336398",
+          "date": "2026-07-28",
+          "amount": 4000,
+          "method": "cash",
+          "notes": ""
+        }
+      ]
     },
     {
       "taxMode": "exclusive",
@@ -487,7 +503,24 @@
       "userId": "u1785069513601",
       "otherCharges": 0,
       "paymentMode": "cash",
-      "id": 1785257445360
+      "id": 1785257445360,
+      "payments": [
+        {
+          "id": "pay1785263250579",
+          "date": "2026-07-28",
+          "amount": 4000,
+          "method": "cash",
+          "notes": ""
+        },
+        {
+          "id": "pay1785263299927",
+          "date": "2026-07-28",
+          "amount": 500,
+          "method": "cash",
+          "notes": ""
+        }
+      ],
+      "status": "Paid"
     },
     {
       "date": "2026-07-28T00:00:00.000Z",
@@ -517,7 +550,17 @@
       "paymentMode": "cash",
       "taxMode": "exclusive",
       "id": 1785257582450,
-      "userId": "u1785069513601"
+      "userId": "u1785069513601",
+      "payments": [
+        {
+          "id": "pay1785263293596",
+          "date": "2026-07-28",
+          "amount": 3500,
+          "method": "cash",
+          "notes": ""
+        }
+      ],
+      "status": "Paid"
     },
     {
       "date": "2026-07-28T00:00:00.000Z",
@@ -547,7 +590,17 @@
       "paymentMode": "cash",
       "taxMode": "exclusive",
       "id": 1785257709966,
-      "userId": "u1785069513601"
+      "userId": "u1785069513601",
+      "payments": [
+        {
+          "id": "pay1785263314356",
+          "date": "2026-07-28",
+          "amount": 65000,
+          "method": "cash",
+          "notes": ""
+        }
+      ],
+      "status": "Paid"
     },
     {
       "date": "2026-07-28T00:00:00.000Z",
@@ -577,7 +630,17 @@
       "paymentMode": "cash",
       "taxMode": "exclusive",
       "id": 1785257992509,
-      "userId": "u1785069513601"
+      "userId": "u1785069513601",
+      "payments": [
+        {
+          "id": "pay1785263320896",
+          "date": "2026-07-28",
+          "amount": 4500,
+          "method": "cash",
+          "notes": ""
+        }
+      ],
+      "status": "Paid"
     },
     {
       "date": "2026-07-28T00:00:00.000Z",
@@ -607,7 +670,17 @@
       "paymentMode": "cash",
       "taxMode": "exclusive",
       "id": 1785258148608,
-      "userId": "u1785069513601"
+      "userId": "u1785069513601",
+      "payments": [
+        {
+          "id": "pay1785263328501",
+          "date": "2026-07-28",
+          "amount": 3500,
+          "method": "cash",
+          "notes": ""
+        }
+      ],
+      "status": "Paid"
     },
     {
       "date": "2026-07-28T00:00:00.000Z",

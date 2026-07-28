@@ -85,18 +85,18 @@ export default function TransactionHistory({ type }) {
         .join(', ')
       const totalQty = items.reduce((sum, item) => sum + toNumber(item.qty), 0)
       const invoice = `${isSales ? 'INV' : 'PUR'}-${record.id}`
-      const status = isSales
-        ? toNumber(record.balance) > 0
-          ? 'Pending'
-          : 'Paid'
-        : toNumber(record.balance) === 0
-        ? 'Paid'
-        : 'Pending'
       const date = record.date ? record.date.slice(0, 10) : ''
       const paymentMode = record.paymentMode || 'cash'
       const total = toNumber(record.total)
-      const received = record.received !== undefined ? toNumber(record.received) : total
-      const balance = toNumber(record.balance ?? 0)
+      // Compute received amount from payments array if present, otherwise fall back to legacy fields
+      let received = total
+      if (Array.isArray(record.payments) && record.payments.length > 0) {
+        received = record.payments.reduce((s, p) => s + toNumber(p.amount), 0)
+      } else if (record.received !== undefined) {
+        received = toNumber(record.received)
+      }
+      const balance = Math.max(0, total - received)
+      const status = isSales ? (balance > 0 ? 'Pending' : 'Paid') : (balance === 0 ? 'Paid' : 'Pending')
       const state = record.stateOfSupply || '-'
       const note = record.billingAddress || record.note || ''
       return {
@@ -238,6 +238,139 @@ export default function TransactionHistory({ type }) {
 
   const handlePrint = () => {
     window.print()
+  }
+
+  const printInvoice = (record) => {
+    if (!record) return
+    const businessName = store.currentUser?.businessName || 'EasyInventory'
+    const businessAddress = store.currentUser?.businessAddress || ''
+    const businessPhone = store.currentUser?.phone || ''
+    const logo = store.currentUser?.logoUrl || ''
+    const payments = Array.isArray(record.payments) ? record.payments : []
+    const totalReceived = payments.reduce((s, p) => s + toNumber(p.amount), 0)
+    const balance = Math.max(0, toNumber(record.total) - totalReceived)
+
+    const itemsHtml = (Array.isArray(record.items) ? record.items : []).map((it, idx) => {
+      const product = store.getProduct(it.productId)
+      const name = product?.name || it.productId || ''
+      return `
+        <tr>
+          <td style="padding:6px;border:1px solid #ddd;text-align:center">${idx + 1}</td>
+          <td style="padding:6px;border:1px solid #ddd">${name}</td>
+          <td style="padding:6px;border:1px solid #ddd;text-align:right">${toNumber(it.qty)}</td>
+          <td style="padding:6px;border:1px solid #ddd;text-align:right">₹${toNumber(it.price).toFixed(2)}</td>
+          <td style="padding:6px;border:1px solid #ddd;text-align:right">₹${toNumber(it.amount).toFixed(2)}</td>
+        </tr>`
+    }).join('')
+
+    const paymentsHtml = payments.length > 0 ? payments.map(p => `
+      <tr>
+        <td style="padding:6px;border:1px solid #ddd">${p.date}</td>
+        <td style="padding:6px;border:1px solid #ddd">${p.method}</td>
+        <td style="padding:6px;border:1px solid #ddd;text-align:right">₹${toNumber(p.amount).toFixed(2)}</td>
+        <td style="padding:6px;border:1px solid #ddd">${p.notes || ''}</td>
+      </tr>
+    `).join('') : '<tr><td colspan="4" style="padding:6px;border:1px solid #ddd;text-align:center">No payments recorded</td></tr>'
+
+    const html = `<!doctype html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Invoice ${record.invoice}</title>
+        <style>
+          body { font-family: Arial, Helvetica, sans-serif; color:#222; padding:20px }
+          .header { display:flex; align-items:center; justify-content:space-between }
+          .logo { max-width:120px; max-height:60px }
+          .invoice-meta { text-align:right }
+          table { width:100%; border-collapse:collapse; margin-top:12px }
+          th { background:#f7f7f7; padding:8px; border:1px solid #ddd; text-align:left }
+          td { padding:6px; border:1px solid #ddd }
+          .summary { margin-top:12px; width:100%; }
+          .summary td { border:none; padding:4px }
+          @media print { body { margin:0 } .no-print { display:none !important } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div>
+            <h2 style="margin:0">${businessName}</h2>
+            <div style="font-size:12px;color:#555">${businessAddress}</div>
+            <div style="font-size:12px;color:#555">${businessPhone}</div>
+          </div>
+          <div class="invoice-meta">
+            ${logo ? `<img src="${logo}" class="logo" />` : ''}
+            <div><strong>Invoice:</strong> ${record.invoice}</div>
+            <div><strong>Date:</strong> ${record.date ? record.date.slice(0,10) : ''}</div>
+            <div><strong>Payment:</strong> ${record.paymentMode || ''}</div>
+            <div><strong>Status:</strong> ${record.balance === 0 || balance === 0 ? 'Paid' : 'Pending'}</div>
+          </div>
+        </div>
+
+        <hr />
+
+        <div style="margin-top:8px">
+          <strong>Bill To:</strong>
+          <div>${record.partyName || ''}</div>
+          <div style="font-size:12px;color:#555">${record.note || ''}</div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th style="width:40px">#</th>
+              <th>Item</th>
+              <th style="width:80px;text-align:right">Qty</th>
+              <th style="width:110px;text-align:right">Unit Price</th>
+              <th style="width:120px;text-align:right">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsHtml}
+          </tbody>
+        </table>
+
+        <table class="summary" style="margin-top:8px">
+          <tr>
+            <td style="width:60%"></td>
+            <td style="text-align:right; width:40%">
+              <table style="width:100%">
+                <tr><td>Subtotal</td><td style="text-align:right">₹${toNumber(record.total).toFixed(2)}</td></tr>
+                <tr><td>Total Received</td><td style="text-align:right">₹${totalReceived.toFixed(2)}</td></tr>
+                <tr><td><strong>Balance</strong></td><td style="text-align:right"><strong>₹${balance.toFixed(2)}</strong></td></tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+
+        <h4 style="margin-top:18px">Payment History</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Method</th>
+              <th style="text-align:right">Amount</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${paymentsHtml}
+          </tbody>
+        </table>
+
+        <div style="margin-top:20px; font-size:12px; color:#666">Thank you for your business!</div>
+      </body>
+      </html>`
+
+    const w = window.open('', '_blank')
+    if (!w) {
+      alert('Popup blocked. Please allow popups to print the invoice.')
+      return
+    }
+    w.document.open()
+    w.document.write(html)
+    w.document.close()
+    w.focus()
+    setTimeout(() => { w.print(); /* do not auto-close to allow user to save */ }, 500)
   }
 
   const toggleSort = (field) => {
@@ -499,6 +632,14 @@ export default function TransactionHistory({ type }) {
                         <Eye className="w-4 h-4" />
                         View
                       </button>
+                      <button
+                        type="button"
+                        onClick={e => { e.stopPropagation(); printInvoice(record) }}
+                        className="inline-flex items-center gap-1 text-slate-700 hover:text-slate-900 ml-2"
+                      >
+                        <Printer className="w-4 h-4" />
+                        Print
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -564,6 +705,14 @@ export default function TransactionHistory({ type }) {
                   className="inline-flex items-center justify-center rounded-full p-2 text-slate-500 hover:bg-slate-100"
                 >
                   <X className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => printInvoice(selectedRecord)}
+                  className="inline-flex items-center gap-2 bg-slate-100 text-slate-700 px-3 py-2 rounded text-sm font-medium hover:bg-slate-200"
+                >
+                  <Printer className="w-4 h-4" />
+                  Print
                 </button>
                 <button
                   type="button"
@@ -643,6 +792,39 @@ export default function TransactionHistory({ type }) {
                     )}
                   </div>
                 </div>
+
+                <div>
+                  <div className="font-semibold text-slate-800 text-sm mb-2">Payment History</div>
+                  <div className="text-sm">
+                    {Array.isArray(selectedRecord.payments) && selectedRecord.payments.length > 0 ? (
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full text-sm">
+                          <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-600">
+                            <tr>
+                              <th className="px-3 py-2">Date</th>
+                              <th className="px-3 py-2">Method</th>
+                              <th className="px-3 py-2 text-right">Amount</th>
+                              <th className="px-3 py-2">Notes</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {selectedRecord.payments.map((p, idx) => (
+                              <tr key={p.id || idx} className="border-t">
+                                <td className="px-3 py-2">{formatDate(p.date)}</td>
+                                <td className="px-3 py-2">{p.method}</td>
+                                <td className="px-3 py-2 text-right">₹{toNumber(p.amount).toFixed(2)}</td>
+                                <td className="px-3 py-2">{p.notes || '-'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-slate-500">No payments recorded.</p>
+                    )}
+                  </div>
+                </div>
+
               </div>
               <div className="space-y-4 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm">
                 <div className="flex justify-between text-slate-700">
@@ -765,18 +947,23 @@ export default function TransactionHistory({ type }) {
 
                         setPaymentSaving(true)
                         try {
-                          const newReceived = (selectedRecord.received || 0) + amt
-                          const newBalance = Math.max(0, (selectedRecord.total || 0) - newReceived)
-                          const updates = {
-                            received: newReceived,
-                            balance: newBalance,
-                            // include payment metadata for record-keeping
-                            lastPaymentDate: paymentDate,
-                            lastPaymentMethod: paymentMethod,
-                            lastPaymentNotes: paymentNotes,
+                          // Build a payment entry and append to payments array
+                          const newPayment = {
+                            id: `pay${Date.now()}`,
+                            date: paymentDate,
+                            amount: amt,
+                            method: paymentMethod || 'cash',
+                            notes: paymentNotes || '',
                           }
-                          // update status field for convenience (server may derive it)
-                          updates.status = newBalance === 0 ? 'Paid' : 'Pending'
+                          const existingPayments = Array.isArray(selectedRecord.payments) ? selectedRecord.payments : (Array.isArray(selectedRecord.payments) ? selectedRecord.payments : [])
+                          const updatedPayments = [...existingPayments, newPayment]
+
+                          const totalReceived = updatedPayments.reduce((s, p) => s + toNumber(p.amount), 0)
+                          const newBalance = Math.max(0, (selectedRecord.total || 0) - totalReceived)
+                          const updates = {
+                            payments: updatedPayments,
+                            status: newBalance === 0 ? 'Paid' : 'Pending',
+                          }
 
                           const updatedSale = await store.updateSale(selectedRecord.id, updates)
 
@@ -792,7 +979,17 @@ export default function TransactionHistory({ type }) {
                             }
                           }
 
-                          setSelectedRecord(prev => ({ ...prev, ...updatedSale }))
+                          // Merge returned sale and ensure derived fields are present for immediate UI update
+                          const merged = {
+                            ...selectedRecord,
+                            ...updatedSale,
+                            payments: updatedPayments,
+                            received: totalReceived,
+                            balance: newBalance,
+                            status: updates.status,
+                          }
+
+                          setSelectedRecord(merged)
                           setShowPaymentModal(false)
                           setMessage({ type: 'success', text: 'Payment recorded successfully.' })
                           setTimeout(() => setMessage(null), 2500)
