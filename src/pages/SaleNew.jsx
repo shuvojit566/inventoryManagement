@@ -136,6 +136,21 @@ export default function SaleNew() {
     setShareModalOpen(false)
   }
 
+  // Handle Generate e-Invoice button. Prevents accidental delegation that may trigger print.
+  const handleGenerateEInvoice = (e) => {
+    // Prevent other click handlers from running via delegation and stop default behavior
+    if (e && e.preventDefault) e.preventDefault()
+    if (e && e.stopPropagation) e.stopPropagation()
+
+    if (!lastSavedSale) {
+      setMessage({ type: 'error', text: 'Please save the sale first before generating e-Invoice.' })
+      return
+    }
+
+    // TODO: Implement actual e-invoice API call here.
+    setMessage({ type: 'success', text: `E-invoice process started for Invoice: ${lastSavedSale.id}` })
+  }
+
   const handleNewSale = () => {
     resetSaleForm()
     setLastSavedSale(null)
@@ -350,11 +365,42 @@ export default function SaleNew() {
                 className="px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
               >
                 <option value="">Select</option>
-                <option value="Delhi">Delhi</option>
+                <option value="Andaman and Nicobar Islands">Andaman and Nicobar Islands</option>
+                <option value="Andhra Pradesh">Andhra Pradesh</option>
+                <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                <option value="Assam">Assam</option>
+                <option value="Bihar">Bihar</option>
+                <option value="Chhattisgarh">Chhattisgarh</option>
+                <option value="Goa">Goa</option>
+                <option value="Gujarat">Gujarat</option>
                 <option value="Haryana">Haryana</option>
-                <option value="Uttar Pradesh">Uttar Pradesh</option>
+                <option value="Himachal Pradesh">Himachal Pradesh</option>
+                <option value="Jharkhand">Jharkhand</option>
+                <option value="Karnataka">Karnataka</option>
+                <option value="Kerala">Kerala</option>
+                <option value="Ladakh">Ladakh</option>
+                <option value="Lakshadweep">Lakshadweep</option>
+                <option value="Madhya Pradesh">Madhya Pradesh</option>
+                <option value="Maharashtra">Maharashtra</option>
+                <option value="Manipur">Manipur</option>
+                <option value="Meghalaya">Meghalaya</option>
+                <option value="Mizoram">Mizoram</option>
+                <option value="Nagaland">Nagaland</option>
+                <option value="Odisha">Odisha</option>
+                <option value="Puducherry">Puducherry</option>
                 <option value="Punjab">Punjab</option>
                 <option value="Rajasthan">Rajasthan</option>
+                <option value="Sikkim">Sikkim</option>
+                <option value="Tamil Nadu">Tamil Nadu</option>
+                <option value="Telangana">Telangana</option>
+                <option value="Tripura">Tripura</option>
+                <option value="Uttar Pradesh">Uttar Pradesh</option>
+                <option value="Uttarakhand">Uttarakhand</option>
+                <option value="West Bengal">West Bengal</option>
+                <option value="Chandigarh">Chandigarh</option>
+                <option value="Dadra and Nagar Haveli and Daman and Diu">Dadra and Nagar Haveli and Daman and Diu</option>
+                <option value="Jammu and Kashmir">Jammu and Kashmir</option>
+                <option value="National Capital Territory of Delhi">National Capital Territory of Delhi</option>
               </select>
             </div>
             <div className="grid grid-cols-[120px_1fr] items-center gap-3">
@@ -558,7 +604,7 @@ export default function SaleNew() {
               <input
                 type="number"
                 value={mechanicCharge}
-                onChange={e => setMechanicCharge(parseFloat(e.target.value) || 0)}
+                onChange={e => setMechanicCharge(e.target.value === '' ? '' : e.target.value)}
                 className="px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
                 min="0"
                 step="0.01"
@@ -571,7 +617,7 @@ export default function SaleNew() {
               <input
                 type="number"
                 value={labourCharge}
-                onChange={e => setLabourCharge(parseFloat(e.target.value) || 0)}
+                onChange={e => setLabourCharge(e.target.value === '' ? '' : e.target.value)}
                 className="px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
                 min="0"
                 step="0.01"
@@ -584,7 +630,7 @@ export default function SaleNew() {
               <input
                 type="number"
                 value={installationCharge}
-                onChange={e => setInstallationCharge(parseFloat(e.target.value) || 0)}
+                onChange={e => setInstallationCharge(e.target.value === '' ? '' : e.target.value)}
                 className="px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
                 min="0"
                 step="0.01"
@@ -597,7 +643,7 @@ export default function SaleNew() {
               <input
                 type="number"
                 value={serviceCharge}
-                onChange={e => setServiceCharge(parseFloat(e.target.value) || 0)}
+                onChange={e => setServiceCharge(e.target.value === '' ? '' : e.target.value)}
                 className="px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
                 min="0"
                 step="0.01"
@@ -610,7 +656,7 @@ export default function SaleNew() {
               <input
                 type="number"
                 value={otherCharges}
-                onChange={e => setOtherCharges(parseFloat(e.target.value) || 0)}
+                onChange={e => setOtherCharges(e.target.value === '' ? '' : e.target.value)}
                 className="px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
                 min="0"
                 step="0.01"
@@ -652,7 +698,7 @@ export default function SaleNew() {
             <input
               type="number"
               value={receivedAmount}
-              onChange={e => setReceivedAmount(parseFloat(e.target.value) || 0)}
+              onChange={e => setReceivedAmount(e.target.value === '' ? '' : e.target.value)}
               className="px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
               min="0"
               step="0.01"
@@ -669,6 +715,8 @@ export default function SaleNew() {
       <div className="sticky bottom-0 bg-white border rounded-lg p-4 flex justify-end gap-3 shadow-sm">
         <button
           type="button"
+          onClick={handleGenerateEInvoice}
+          onClickCapture={(e) => { e.stopPropagation(); }}
           className="px-4 py-2 border border-sky-200 text-sky-700 rounded font-medium hover:bg-sky-50"
         >
           Generate e-Invoice

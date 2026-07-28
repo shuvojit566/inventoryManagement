@@ -18,6 +18,7 @@ import ForgotPassword from './pages/ForgotPassword'
 import Profile from './pages/Profile'
 import AdminLogin from './pages/AdminLogin'
 import AdminDashboard from './pages/AdminDashboard'
+import AdminAnalytics from './pages/AdminAnalytics'
 import AdminUsers from './pages/AdminUsers'
 import AdminUserDetails from './pages/AdminUserDetails'
 import AdminSettings from './pages/AdminSettings'
@@ -76,6 +77,14 @@ function App() {
         element={
           <AdminProtectedRoute>
             <AdminUserDetails />
+          </AdminProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/analytics"
+        element={
+          <AdminProtectedRoute>
+            <AdminAnalytics />
           </AdminProtectedRoute>
         }
       />

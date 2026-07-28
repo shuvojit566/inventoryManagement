@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { X, Mail, MessageCircle, Copy, Check } from 'lucide-react'
-import { generateBillShareURL, shareViaWhatsApp, shareViaEmail, generateWhatsAppText, generateEmailContent } from '../utils/billShare'
+import { generateBillShareURL, shareViaWhatsApp, shareViaEmail, generateWhatsAppText, generateEmailContent, shareBillAsPdf } from '../utils/billShare'
 import { sanitizePhoneInput, isValidPhoneNumber } from '../utils/phone'
 
 export default function BillShareModal({ isOpen, onClose, sale, storeData }) {
@@ -21,7 +21,7 @@ export default function BillShareModal({ isOpen, onClose, sale, storeData }) {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const handleShareWhatsApp = () => {
+  const handleShareWhatsApp = async () => {
     if (!phone) {
       setError('Please enter a phone number')
       return
@@ -30,22 +30,50 @@ export default function BillShareModal({ isOpen, onClose, sale, storeData }) {
       setError('Please enter a valid 10-digit phone number')
       return
     }
+
+    setError(null)
+    const formattedBill = {
+      ...sale,
+      items: sale.items.map(item => ({
+        ...item,
+        productName: storeData.products.find(p => p.id === item.productId)?.name || 'Unknown',
+      })),
+      customer,
+    }
+
     try {
-      setError(null)
-      const formattedBill = {
-        ...sale,
-        items: sale.items.map(item => ({
-          ...item,
-          productName: storeData.products.find(p => p.id === item.productId)?.name || 'Unknown',
-        })),
-        customer,
+      // Try to share as PDF first
+      const res = await shareBillAsPdf(formattedBill)
+      if (res && res.shared) {
+        setSuccessMessage('Opening share sheet...')
+        setTimeout(() => setSuccessMessage(null), 2000)
+        return
       }
+
+      if (res && res.downloaded) {
+        setSuccessMessage('PDF downloaded — attach it to WhatsApp to share')
+        setTimeout(() => setSuccessMessage(null), 3000)
+        return
+      }
+
+      if (res && res.error) {
+        console.error('shareBillAsPdf error:', res.error)
+        // fallthrough to fallback below
+      }
+    } catch (err) {
+      console.error('shareBillAsPdf threw:', err)
+      // continue to fallback
+    }
+
+    // Fallback: share link via wa.me if PDF couldn't be shared
+    try {
       const text = generateWhatsAppText(formattedBill, billURL)
       shareViaWhatsApp(phone, text)
-      setSuccessMessage('Opening WhatsApp...')
+      setSuccessMessage('Opening WhatsApp with link (fallback)')
       setTimeout(() => setSuccessMessage(null), 2000)
     } catch (err) {
-      setError('Failed to share via WhatsApp')
+      console.error('Fallback shareViaWhatsApp failed:', err)
+      setError('Failed to share via WhatsApp — please try downloading the PDF and share manually')
     }
   }
 
@@ -144,6 +172,36 @@ export default function BillShareModal({ isOpen, onClose, sale, storeData }) {
               >
                 <MessageCircle className="w-4 h-4" />
                 Share via WhatsApp
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    setError(null)
+                    const formattedBill = {
+                      ...sale,
+                      items: sale.items.map(item => ({
+                        ...item,
+                        productName: storeData.products.find(p => p.id === item.productId)?.name || 'Unknown',
+                      })),
+                      customer,
+                    }
+                    const res = await shareBillAsPdf(formattedBill)
+                    if (res && res.shared) {
+                      setSuccessMessage('Shared via native share sheet')
+                      setTimeout(() => setSuccessMessage(null), 2000)
+                    } else if (res && res.downloaded) {
+                      setSuccessMessage('PDF downloaded — attach it to WhatsApp to share')
+                      setTimeout(() => setSuccessMessage(null), 3000)
+                    } else if (res && res.error) {
+                      setError('Failed to generate/share PDF: ' + res.error)
+                    }
+                  } catch (err) {
+                    setError('Failed to generate/share PDF')
+                  }
+                }}
+                className="w-full flex items-center justify-center gap-2 border border-gray-200 mt-2 bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded font-medium transition"
+              >
+                Share PDF (mobile)
               </button>
             </div>
           </div>

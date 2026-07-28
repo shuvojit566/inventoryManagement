@@ -51,6 +51,16 @@ export default function TransactionHistory({ type }) {
   const [deleteLoading, setDeleteLoading] = useState(false)
   const tableRef = useRef(null)
 
+  // Payment modal state
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [paymentAmount, setPaymentAmount] = useState('')
+  const [paymentMethod, setPaymentMethod] = useState('')
+  const [paymentDate, setPaymentDate] = useState(() => new Date().toISOString().split('T')[0])
+  const [paymentNotes, setPaymentNotes] = useState('')
+  const [paymentSaving, setPaymentSaving] = useState(false)
+  // Delete confirmation modal state
+  const [confirmDelete, setConfirmDelete] = useState(null)
+
   const isSales = type === 'sales'
   const title = isSales ? 'Sales History' : 'Purchase History'
   const partyLabel = isSales ? 'Customer' : 'Supplier'
@@ -240,7 +250,7 @@ export default function TransactionHistory({ type }) {
   }
 
   const handleDelete = async (record) => {
-    if (!window.confirm('Delete this transaction?')) return
+    // Performs deletion of the given record (record.id expected)
     setDeleteLoading(true)
     try {
       if (isSales) {
@@ -248,11 +258,18 @@ export default function TransactionHistory({ type }) {
       } else {
         await store.deletePurchase(record.id)
       }
-      setMessage({ type: 'success', text: 'Record deleted successfully' })
+      // Close any open detail modal and clear confirm dialog
       setSelectedRecord(null)
+      setConfirmDelete(null)
+
+      // notify success and let derived state recalc summaries
+      setMessage({ type: 'success', text: 'Transaction deleted successfully.' })
       setTimeout(() => setMessage(null), 2500)
     } catch (err) {
-      setMessage({ type: 'error', text: err.message || 'Unable to delete record' })
+      // Log for debugging and show friendly message
+      console.error('Failed to delete record:', err)
+      setMessage({ type: 'error', text: err.message || 'Unable to delete transaction. See console for details.' })
+      setTimeout(() => setMessage(null), 4000)
     } finally {
       setDeleteLoading(false)
     }
@@ -391,6 +408,22 @@ export default function TransactionHistory({ type }) {
       {message && (
         <div className={`rounded-lg p-4 ${message.type === 'error' ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-green-50 border border-green-200 text-green-700'}`}>
           {message.text}
+        </div>
+      )}
+
+      {/* Confirm Delete Modal */}
+      {confirmDelete && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-md bg-white rounded-lg shadow-xl overflow-hidden">
+            <div className="p-5">
+              <h4 className="text-lg font-semibold">Confirm Delete</h4>
+              <p className="text-sm text-slate-600 mt-2">Are you sure you want to delete invoice <strong>{confirmDelete.invoice}</strong>?</p>
+              <div className="flex items-center justify-end gap-2 mt-4">
+                <button onClick={() => setConfirmDelete(null)} className="px-3 py-2 border rounded text-sm">Cancel</button>
+                <button onClick={() => handleDelete(confirmDelete)} className="px-3 py-2 bg-red-600 text-white rounded text-sm hover:bg-red-700">Delete</button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -534,7 +567,7 @@ export default function TransactionHistory({ type }) {
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleDelete(selectedRecord)}
+                  onClick={() => setConfirmDelete(selectedRecord)}
                   className="inline-flex items-center gap-2 bg-red-50 text-red-700 px-3 py-2 rounded text-sm font-medium hover:bg-red-100"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -628,10 +661,28 @@ export default function TransactionHistory({ type }) {
                   <span>Payment Method</span>
                   <strong className="capitalize">{selectedRecord.paymentMode}</strong>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col items-center gap-2">
+                  {/* Receive Payment button: only show when balance > 0 */}
+                  {selectedRecord.balance > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        // Prefill payment modal defaults from selected record then show it
+                        setPaymentAmount(String(selectedRecord.balance))
+                        setPaymentMethod(selectedRecord.paymentMode || 'cash')
+                        setPaymentDate(new Date().toISOString().split('T')[0])
+                        setPaymentNotes('')
+                        setShowPaymentModal(true)
+                      }}
+                      className="w-full inline-flex items-center justify-center gap-2 rounded bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+                    >
+                      Receive Payment
+                    </button>
+                  )}
+
                   <button
                     type="button"
-                    onClick={() => handleDelete(selectedRecord)}
+                    onClick={() => setConfirmDelete(selectedRecord)}
                     disabled={deleteLoading}
                     className="w-full inline-flex items-center justify-center gap-2 rounded bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
                   >
@@ -642,6 +693,128 @@ export default function TransactionHistory({ type }) {
               </div>
             </div>
           </div>
+
+          {/* Payment Modal */}
+          {showPaymentModal && (
+            <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/40 p-4">
+              <div className="w-full max-w-md bg-white rounded-lg shadow-xl overflow-hidden">
+                <div className="flex items-center justify-between border-b px-5 py-4">
+                  <h4 className="text-lg font-semibold">Receive Payment</h4>
+                  <button onClick={() => setShowPaymentModal(false)} className="text-slate-500 hover:bg-slate-100 rounded-full p-2">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="p-5 space-y-3">
+                  <div className="text-sm">
+                    <div className="font-semibold">Invoice Number</div>
+                    <div className="text-slate-700">{selectedRecord.invoice}</div>
+                  </div>
+                  <div className="text-sm">
+                    <div className="font-semibold">Remaining Balance</div>
+                    <div className="text-slate-700">₹{selectedRecord.balance.toFixed(2)}</div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Amount Received</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={paymentAmount}
+                      onChange={e => setPaymentAmount(e.target.value)}
+                      className="w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Payment Method</label>
+                    <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} className="w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                      <option value="cash">Cash</option>
+                      <option value="bank">Bank Transfer</option>
+                      <option value="upi">UPI</option>
+                      <option value="card">Credit Card</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Payment Date</label>
+                    <input type="date" value={paymentDate} onChange={e => setPaymentDate(e.target.value)} className="w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Notes (optional)</label>
+                    <input type="text" value={paymentNotes} onChange={e => setPaymentNotes(e.target.value)} className="w-full px-3 py-2 border rounded text-sm" />
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-2">
+                    <button onClick={() => setShowPaymentModal(false)} className="px-4 py-2 border rounded text-sm">Cancel</button>
+                    <button
+                      onClick={async () => {
+                        // If user didn't change the amount, default to remaining balance
+                        const amt = paymentAmount === '' ? toNumber(selectedRecord.balance) : parseFloat(paymentAmount)
+                        if (!amt || amt <= 0) {
+                          setMessage({ type: 'error', text: 'Please enter a valid amount' })
+                          return
+                        }
+                        // Cap to remaining balance
+                        const remaining = toNumber(selectedRecord.balance)
+                        if (amt > remaining) {
+                          setMessage({ type: 'error', text: 'Amount cannot exceed remaining balance' })
+                          return
+                        }
+
+                        setPaymentSaving(true)
+                        try {
+                          const newReceived = (selectedRecord.received || 0) + amt
+                          const newBalance = Math.max(0, (selectedRecord.total || 0) - newReceived)
+                          const updates = {
+                            received: newReceived,
+                            balance: newBalance,
+                            // include payment metadata for record-keeping
+                            lastPaymentDate: paymentDate,
+                            lastPaymentMethod: paymentMethod,
+                            lastPaymentNotes: paymentNotes,
+                          }
+                          // update status field for convenience (server may derive it)
+                          updates.status = newBalance === 0 ? 'Paid' : 'Pending'
+
+                          const updatedSale = await store.updateSale(selectedRecord.id, updates)
+
+                          // If credit sale and customer exists, reduce customer balance
+                          if (selectedRecord.customerId && selectedRecord.paymentMode === 'credit') {
+                            try {
+                              const customer = store.getCustomer(selectedRecord.customerId)
+                              if (customer) {
+                                await store.updateCustomer(customer.id, { ...customer, balance: toNumber(customer.balance) - amt })
+                              }
+                            } catch (custErr) {
+                              console.error('Failed updating customer balance after payment:', custErr)
+                            }
+                          }
+
+                          setSelectedRecord(prev => ({ ...prev, ...updatedSale }))
+                          setShowPaymentModal(false)
+                          setMessage({ type: 'success', text: 'Payment recorded successfully.' })
+                          setTimeout(() => setMessage(null), 2500)
+                        } catch (err) {
+                          // Log full error for debugging
+                          console.error('Error saving payment:', err)
+                          setMessage({ type: 'error', text: err.message || 'Unable to record payment. See console for details.' })
+                        } finally {
+                          setPaymentSaving(false)
+                        }
+                      }}
+                      disabled={paymentSaving}
+                      className="px-4 py-2 bg-emerald-600 text-white rounded text-sm hover:bg-emerald-700 disabled:opacity-50"
+                    >
+                      {paymentSaving ? 'Saving...' : 'Save Payment'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
       )}
     </div>

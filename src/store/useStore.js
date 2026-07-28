@@ -426,6 +426,17 @@ const useStore = create((set, get) => ({
     }
   },
 
+  updateSale: async (id, updates) => {
+    try {
+      const updated = normalizeSale(await api.updateSale(id, updates))
+      set(state => ({ sales: state.sales.map(s => (s.id === id ? updated : s)) }))
+      return updated
+    } catch (err) {
+      set({ error: err.message })
+      throw err
+    }
+  },
+
   getSalesToday: () => {
     const today = api.getTodayDateStr()
     return get().sales.filter(s => s.date.startsWith(today))

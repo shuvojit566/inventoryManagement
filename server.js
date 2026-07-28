@@ -474,11 +474,42 @@ server.use((req, res, next) => {
     if (match) {
       const collection = match[1]
       const id = match[2]
-      const item = router.db.get(collection).find({ id }).value()
-      if (!item || item.userId !== userId) {
+      // Try direct match first
+      let item = router.db.get(collection).find({ id }).value()
+      // If not found and id looks numeric, try numeric match to handle number ids in db.json
+      if (!item) {
+        const numericId = Number(id)
+        if (!Number.isNaN(numericId)) {
+          item = router.db.get(collection).find(i => i.id === numericId).value()
+        }
+      }
+      // Also attempt matching by stringified id of numeric stored ids
+      if (!item) {
+        item = router.db.get(collection).find(i => String(i.id) === String(id)).value()
+      }
+
+      if (!item) {
         return res.status(404).json({ error: 'Resource not found.' })
       }
-      if (collection === 'users' && id !== userId) {
+
+      // Allow operations when the item belongs to the authenticated user OR
+      // when the item has no userId (legacy/imported data). If userId is missing,
+      // attach it so future operations work normally.
+      if (item.userId && item.userId !== userId) {
+        return res.status(404).json({ error: 'Resource not found.' })
+      }
+
+      if (!item.userId) {
+        try {
+          router.db.get(collection).find(i => String(i.id) === String(item.id)).assign({ userId }).write()
+          // refresh item reference after assign
+          item = router.db.get(collection).find(i => String(i.id) === String(item.id)).value()
+        } catch (err) {
+          console.warn('[DB] Failed to assign userId to existing item:', err)
+        }
+      }
+
+      if (collection === 'users' && String(id) !== String(userId)) {
         return res.status(403).json({ error: 'Cannot modify another user.' })
       }
     }

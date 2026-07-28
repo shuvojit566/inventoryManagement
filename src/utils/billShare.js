@@ -1,4 +1,5 @@
 import { toNumber } from './math'
+import html2pdf from 'html2pdf.js'
 
 /**
  * Generate a unique bill URL token
@@ -85,7 +86,7 @@ export function formatBillForShare(sale, storeData) {
  * Generate HTML for bill printing
  */
 export function generateBillHTML(formattedBill) {
-  const { business, customer, items, subtotal, totalTax, mechanicCharge, total, paymentMode, date, id } = formattedBill
+  const { business, customer, items, subtotal, totalTax, mechanicCharge, labourCharge, installationCharge, serviceCharge, otherCharges, total, paymentMode, date, id } = formattedBill
 
   const formatCurrency = val => `Rs. ${toNumber(val).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
   const formatDate = dateStr => new Date(dateStr).toLocaleDateString('en-GB')
@@ -340,6 +341,65 @@ export function shareViaWhatsApp(phone, text) {
   const cleanPhone = phone.replace(/[^\d+]/g, '')
   const whatsappURL = `https://wa.me/${cleanPhone}?text=${encodedText}`
   window.open(whatsappURL, '_blank')
+}
+
+/**
+ * Generate a PDF blob from the formatted bill and share or download it.
+ * - On supporting mobile browsers, will invoke the Web Share API with the PDF file (so WhatsApp can be chosen).
+ * - On desktop or unsupported browsers, triggers a download and informs the user to attach manually to WhatsApp.
+ */
+export async function shareBillAsPdf(formattedBill) {
+  const { id } = formattedBill
+  // Create an offscreen container to render the bill HTML
+  const container = document.createElement('div')
+  container.style.position = 'fixed'
+  container.style.left = '-9999px'
+  container.style.top = '0'
+  container.innerHTML = generateBillHTML(formattedBill)
+  document.body.appendChild(container)
+
+  try {
+    // Generate PDF blob using html2pdf
+    const worker = html2pdf().from(container).set({
+      margin: 10,
+      filename: `invoice-${id}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    })
+
+    // html2pdf doesn't expose a direct promise for blob in typings, use toPdf().output('blob')
+    const pdfBlob = await worker.toPdf().output('blob')
+
+    const file = new File([pdfBlob], `invoice-${id}.pdf`, { type: 'application/pdf' })
+
+    // Use Web Share API with files when available (mobile)
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: `Invoice ${id}` })
+        return { shared: true }
+      } catch (err) {
+        // sharing canceled or failed
+        return { shared: false, error: err?.message }
+      }
+    }
+
+    // Fallback: download the PDF and instruct user to attach manually
+    const url = URL.createObjectURL(pdfBlob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `invoice-${id}.pdf`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 60 * 1000)
+    return { downloaded: true }
+  } catch (err) {
+    return { error: err?.message || String(err) }
+  } finally {
+    // Clean up
+    if (container && container.parentNode) container.parentNode.removeChild(container)
+  }
 }
 
 /**
